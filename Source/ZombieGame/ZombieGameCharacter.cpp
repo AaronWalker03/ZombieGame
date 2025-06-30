@@ -113,6 +113,22 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 }
 
 
+void AZombieGameCharacter::SetCurrentHealth(float healthValue)
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		CurrentHealth = FMath::Clamp(healthValue, 0.f, MaxHealth);
+		OnHealthUpdate();
+	}
+}
+
+float AZombieGameCharacter::TakeDamage(float DamageTaken, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float damageApplied = CurrentHealth - DamageTaken;
+	SetCurrentHealth(damageApplied);
+	return damageApplied;
+}
+
 void AZombieGameCharacter::MoveInput(const FInputActionValue& Value)
 {
 	// get the Vector2D move axis

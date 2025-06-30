@@ -24,6 +24,12 @@ AZombieGameProjectile::AZombieGameProjectile()
 	SphereComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 	RootComponent = SphereComponent;
 
+	//Registering the Projectile Impact function on a Hit event.
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		SphereComponent->OnComponentHit.AddDynamic(this, &AZombieGameProjectile::OnProjectileImpact);
+	}
+
 	//Definition for the Mesh that will serve as your visual representation.
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> DefaultMesh(TEXT("/Game/StarterContent/Shapes/Shape_Sphere.Shape_Sphere"));
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
@@ -67,5 +73,21 @@ void AZombieGameProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AZombieGameProjectile::Destroyed()
+{
+	FVector spawnLocation = GetActorLocation();
+	UGameplayStatics::SpawnEmitterAtLocation(this, ExplosionEffect, spawnLocation, FRotator::ZeroRotator, true, EPSCPoolMethod::AutoRelease);
+}
+
+void AZombieGameProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (OtherActor)
+	{
+		UGameplayStatics::ApplyPointDamage(OtherActor, Damage, NormalImpulse, Hit, GetInstigator()->Controller, this, DamageType);
+	}
+
+	Destroy();
 }
 

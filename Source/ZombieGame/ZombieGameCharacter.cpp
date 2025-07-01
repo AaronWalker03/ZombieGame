@@ -10,6 +10,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
+#include "ZombieGameProjectile.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -52,6 +53,13 @@ AZombieGameCharacter::AZombieGameCharacter()
 	//Initialize the player's Health
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
+
+	//Initialize projectile class
+	ProjectileClass = AZombieGameProjectile::StaticClass();
+
+	//Initialize fire rate
+	FireRate = 0.25f;
+	bIsFiringWeapon = false;
 }
 
 void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -110,8 +118,38 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
+
+	// Handle firing projectiles
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AZombieGameCharacter::StartFire);
 }
 
+void AZombieGameCharacter::StartFire()
+{
+	if (!bIsFiringWeapon)
+	{
+		bIsFiringWeapon = true;
+		UWorld* World = GetWorld();
+		World->GetTimerManager().SetTimer(FiringTimer, this, &AZombieGameCharacter::StopFire, FireRate, false);
+		HandleFire();
+	}
+}
+
+void AZombieGameCharacter::StopFire()
+{
+	bIsFiringWeapon = false;
+}
+
+void AZombieGameCharacter::HandleFire()
+{
+	FVector spawnLocation = GetActorLocation() + (GetActorRotation().Vector() * 100.0f) + (GetActorUpVector() * 50.0f);
+	FRotator spawnRotation = GetActorRotation();
+
+	FActorSpawnParameters spawnParameters;
+	spawnParameters.Instigator = GetInstigator();
+	spawnParameters.Owner = this;
+
+	AZombieGameProjectile* spawnedProjectile = GetWorld()->SpawnActor<AZombieGameProjectile>(spawnLocation, spawnRotation, spawnParameters);
+}
 
 void AZombieGameCharacter::SetCurrentHealth(float healthValue)
 {

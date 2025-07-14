@@ -135,8 +135,4 @@ protected:
 
 	/** Returns true if the character already owns a weapon of the given class */
 	AShooterWeapon* FindWeaponOfType(TSubclassOf<AShooterWeapon> WeaponClass) const;
-
-	/** RepNotify for changes made to current health.*/
-	UFUNCTION()
-	void OnRep_CurrentHealth();
 };

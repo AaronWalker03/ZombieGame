@@ -139,7 +139,7 @@ void AZombieGameCharacter::StopFire()
 	bIsFiringWeapon = false;
 }
 
-void AZombieGameCharacter::HandleFire()
+void AZombieGameCharacter::HandleFire_Implementation()
 {
 	FVector spawnLocation = GetActorLocation() + (GetActorRotation().Vector() * 100.0f) + (GetActorUpVector() * 50.0f);
 	FRotator spawnRotation = GetActorRotation();

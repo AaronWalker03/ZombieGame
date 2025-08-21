@@ -62,6 +62,22 @@ AZombieGameCharacter::AZombieGameCharacter()
 	bIsFiringWeapon = false;
 }
 
+void AZombieGameCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = GetInstigator();
+
+	AWeapon* MyWeapon = GetWorld()->SpawnActor<AWeapon>(DefaultWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	//this crashes cose used GetMesh1P, but in here its FirstPersonMesh
+	//TODO: make it bind to fps mesh
+	//MyWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("HandGrip_R"));
+	//EquippedWeapon = MyWeapon;
+}
+
 void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -113,6 +129,11 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::LookInput);
+
+		//TODO: ADD KEYBINDS FOR THIS 
+		//REPLACE PRIOR CODE THAT DOES SHOOTING LOGIC AND MAKE SURE IT ONLY USES THIS
+		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::OnFire);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::OnAim);
 	}
 	else
 	{
@@ -121,6 +142,17 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 	// Handle firing projectiles
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AZombieGameCharacter::StartFire);
+}
+
+//logic that gets sent over to weapon class
+void AZombieGameCharacter::OnFire()
+{
+	EquippedWeapon->Shoot();
+}
+
+void AZombieGameCharacter::OnAim()
+{
+	EquippedWeapon->Aim();
 }
 
 void AZombieGameCharacter::StartFire()
@@ -187,6 +219,7 @@ void AZombieGameCharacter::LookInput(const FInputActionValue& Value)
 
 }
 
+//Assuming this if for server stuff??
 void AZombieGameCharacter::DoAim(float Yaw, float Pitch)
 {
 	if (GetController())

@@ -66,16 +66,53 @@ void AZombieGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.Instigator = GetInstigator();
+	SpawnWeapon();
+}
 
-	AWeapon* MyWeapon = GetWorld()->SpawnActor<AWeapon>(DefaultWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+void AZombieGameCharacter::SpawnWeapon()
+{
+	if (!EquippedWeapon && DefaultWeaponClass)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
 
-	//this crashes cose used GetMesh1P, but in here its FirstPersonMesh
-	//TODO: make it bind to fps mesh
-	//MyWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("HandGrip_R"));
-	//EquippedWeapon = MyWeapon;
+		// Spawn the new weapon
+		AWeapon* MyWeapon = GetWorld()->SpawnActor<AWeapon>(
+			DefaultWeaponClass,
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			SpawnParams
+		);
+
+		if (MyWeapon && FirstPersonMesh)
+		{
+			MyWeapon->AttachToComponent(
+				FirstPersonMesh,
+				FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+				FName("HandGrip_R")
+			);
+
+			EquippedWeapon = MyWeapon;
+		}
+	}
+}
+
+void AZombieGameCharacter::ChangeWeapon(TSubclassOf<AWeapon> NewWeaponClass)
+{
+	if (NewWeaponClass != DefaultWeaponClass)
+	{
+		DefaultWeaponClass = NewWeaponClass;
+
+		if (EquippedWeapon && EquippedWeapon->GetClass() != DefaultWeaponClass)
+		{
+			// Destroy current weapon
+			EquippedWeapon->Destroy();
+			EquippedWeapon = nullptr;
+		}
+
+		SpawnWeapon();
+	}
 }
 
 void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

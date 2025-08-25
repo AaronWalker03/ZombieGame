@@ -16,9 +16,8 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-/**
- *  A basic first person character
- */
+//NEED TO CREATE SOME SORT OF SAVE FILE TO REMEMBER PLAYER DATA FOR WEAPONS AND EQUIPMENT
+
 UCLASS(abstract)
 class AZombieGameCharacter : public ACharacter
 {
@@ -56,7 +55,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
 	class UInputAction* MouseLookAction;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Weapon)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	AWeapon* EquippedWeapon;
 
 	/** The player's maximum health. This is the highest value of their health can be. This value is a value of the player's health, which starts at when spawned.*/
@@ -71,6 +70,11 @@ public:
 	AZombieGameCharacter();
 
 	void BeginPlay();
+
+	void SpawnWeapon();
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeWeapon(TSubclassOf<AWeapon> NewWeaponClass);
 
 	/** Property replication */
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -102,7 +106,7 @@ protected:
 	void OnFire();
 	void OnAim();
 
-	UPROPERTY(EditDefaultsOnly, Category = Weapon)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TSubclassOf<AWeapon> DefaultWeaponClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")

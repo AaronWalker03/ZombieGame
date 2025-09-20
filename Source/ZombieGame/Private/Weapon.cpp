@@ -8,8 +8,8 @@ AWeapon::AWeapon()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
-	SetRootComponent(Mesh);
+	mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
+	SetRootComponent(mesh);
 }
 
 // Called when the game starts or when spawned
@@ -22,7 +22,7 @@ void AWeapon::BeginPlay()
 void AWeapon::Shoot()
 {
     APlayerController* PlayerController = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
-    if (!PlayerController || !Mesh) return;
+    if (!PlayerController || !mesh) return;
 
     // Get direction from player's view
     FVector CameraLocation;
@@ -31,7 +31,7 @@ void AWeapon::Shoot()
     FVector ShootDirection = CameraRotation.Vector();
 
     // Start from the muzzle socket
-    FVector Start = Mesh->GetSocketLocation(TEXT("MuzzleFlashSocket"));
+    FVector Start = mesh->GetSocketLocation(TEXT("MuzzleFlashSocket"));
     FVector End = Start + (ShootDirection * 10000.0f); // 10,000 units forward from socket
 
     // Raycast

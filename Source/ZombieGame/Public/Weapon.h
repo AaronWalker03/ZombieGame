@@ -20,11 +20,11 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, Category = "Mesh")
-	USkeletalMeshComponent* Mesh;
+	USkeletalMeshComponent* mesh;
 
 	// These get set by child classes
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	float Damage;
+	float damage;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float totalAmmoCount;

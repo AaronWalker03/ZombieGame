@@ -23,8 +23,6 @@ void AZombieAi::BeginPlay()
 {
 	Super::BeginPlay();
 
-   
-
     pawnSensingComp->SensingInterval = 0.5f;
     pawnSensingComp->bSeePawns = true;
 

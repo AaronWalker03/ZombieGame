@@ -45,6 +45,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	bool bIsAttacking;
 
+
+	//DO NOT FUCKING TOUCH THESE
 	UFUNCTION()
 	void HandleSeePlayer(APawn* Player);
 

@@ -55,6 +55,8 @@ AZombieGameCharacter::AZombieGameCharacter()
 	CurrentHealth = MaxHealth;
 
 	//Initialize projectile class
+
+	//get rid of this? and use weapon script instead?
 	ProjectileClass = AZombieGameProjectile::StaticClass();
 
 	//Initialize fire rate

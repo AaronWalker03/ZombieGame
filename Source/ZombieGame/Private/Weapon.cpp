@@ -2,6 +2,9 @@
 
 
 #include "Weapon.h"
+#include "Ammunition.h"
+#include "Engine/World.h"
+
 
 // Sets default values
 AWeapon::AWeapon()
@@ -21,6 +24,10 @@ void AWeapon::BeginPlay()
 
 void AWeapon::Shoot()
 {
+    //need to make it use designated ammo bp
+    //get damage info from designated ammo bp?
+    //
+
     APlayerController* PlayerController = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
     if (!PlayerController || !mesh) return;
 

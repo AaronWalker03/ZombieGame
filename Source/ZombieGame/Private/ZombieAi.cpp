@@ -82,7 +82,7 @@ void AZombieAi::Tick(float DeltaTime)
             float DistanceToPlayer = FVector::Dist(GetActorLocation(), TargetPlayer->GetActorLocation());
 
             // If too far, stop chasing
-            if (DistanceToPlayer > 1500.0f) // you can tweak this range
+            if (DistanceToPlayer > 1500.0f) // add variable for the range 
             {
                 TargetPlayer = nullptr;
                 CurrentState = EZombieState::ZS_Wandering;

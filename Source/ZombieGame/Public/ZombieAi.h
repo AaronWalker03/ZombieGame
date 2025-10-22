@@ -22,6 +22,12 @@ class ZOMBIEGAME_API AZombieAi : public ACharacter
 	//implement ai reacting to gunshot sounds, decibels could be implemented for hearing range
 	//this is where different amunition comes into play for supersonic or subsonic ammunition
 
+	//later on random/procedural effects to the zombies with different effects and skins
+	//some that are fresher with more blood? 
+	//maybe some with more or less armour which would help with different ammo uses
+
+	//maybe add infection? 
+
 public:
 	AZombieAi();
 

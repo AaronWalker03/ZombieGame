@@ -19,18 +19,21 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	//ideally turn the current mesh into fully in depth to show components and what part can be modded
+
 	UPROPERTY(VisibleAnywhere, Category = "Mesh")
 	USkeletalMeshComponent* mesh;
 
 	// These get set by child classes
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	float damage;
+	//use the bp
+	TSubclassOf<AAmmunition> ammunitionType;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	float totalAmmoCount;
+	float magCapacity;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	float currentAmmoCount;
+	float currentAmmo;
 
 	/*UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	UParticleSystem* MuzzleFlash;

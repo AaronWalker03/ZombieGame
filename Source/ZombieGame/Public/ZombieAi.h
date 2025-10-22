@@ -6,19 +6,26 @@
 #include "GameFramework/Character.h"
 #include "ZombieAi.generated.h"
 
+UENUM(BlueprintType)
+enum class EZombieState : uint8
+{
+	ZS_Idle      UMETA(DisplayName = "Idle"),
+	ZS_Attack    UMETA(DisplayName = "Attack"),
+	ZS_Wandering UMETA(DisplayName = "Wandering")
+};
+
 UCLASS()
 class ZOMBIEGAME_API AZombieAi : public ACharacter
 {
 	GENERATED_BODY()
 
-	//enum states for actual states the zombie is in then maybe based on the states the animation follows
+	//implement ai reacting to gunshot sounds, decibels could be implemented for hearing range
+	//this is where different amunition comes into play for supersonic or subsonic ammunition
 
 public:
-	// Sets default values for this character's properties
 	AZombieAi();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
@@ -45,8 +52,20 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	bool bIsAttacking;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
+	EZombieState CurrentState;
+
+	UFUNCTION(BlueprintPure, Category = "AI")
+	EZombieState GetZombieState() const { return CurrentState; }
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+	APawn* TargetPlayer;
+
 
 	//DO NOT FUCKING TOUCH THESE
+	UFUNCTION()
+	void AttackPlayer(APawn* Player);
+
 	UFUNCTION()
 	void HandleSeePlayer(APawn* Player);
 

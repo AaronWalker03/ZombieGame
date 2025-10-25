@@ -26,5 +26,7 @@ void AAmmunition::Tick(float DeltaTime)
 
 
 	//could do sound of each bullet wizzing past in here?
+	//Play whistling bullet sound with attenuation and doppler effect
+	//Stop playing sound once bullet impacts surface or gets too far away
 }
 

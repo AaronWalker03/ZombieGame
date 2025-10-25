@@ -30,7 +30,7 @@ protected:
 	UStaticMeshComponent* fullAmmoMesh;
 
 	//to use for ejecting animations
-	UPROPERTY(VisibleAnywhere, Category = "AmmoMesh")
+	UPROPERTY(VisibleAnywhere, Category = "AmmoMesh") // ~~ idk if all these variable names that are similar will get very confusing and could u use niagra particles for ejection animations ~~
 	UStaticMeshComponent* emptyCasingmesh;
 
 	//to use for the UI ammo mod menu
@@ -57,7 +57,7 @@ protected:
 	//depending on the different properties this affects the damage and penetration
 	//this will then later be on used for taking off body parts
 	UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")
-	float penetration;
+	float penetrationPower;
 
 	UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")
 	float fleshDamage;

@@ -24,52 +24,31 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	//ideally turn this to a skeletal mesh so can in depth modify the bullet components
+	
+	
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(VisibleAnywhere, Category = "AmmoMesh")
-	UStaticMeshComponent* fullAmmoMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoMesh")
+	UStaticMeshComponent* bulletTip;
 
-	//to use for ejecting animations
-	UPROPERTY(VisibleAnywhere, Category = "AmmoMesh") // ~~ idk if all these variable names that are similar will get very confusing and could u use niagra particles for ejection animations ~~
-	UStaticMeshComponent* emptyCasingmesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoMesh")
+	UStaticMeshComponent* casing;
 
-	//to use for the UI ammo mod menu
-	//this will allow the player to visualise what type of bullet they want with different properties and shieet
-	UPROPERTY(VisibleAnywhere, Category = "AmmoMesh")
-	UStaticMeshComponent* bulletMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Ammo Calculation Results")
+	float totalBulletVelocity;
+	UPROPERTY(EditDefaultsOnly, Category = "Ammo Calculation Results")
+	float totalPenetrationPower;
+	UPROPERTY(EditDefaultsOnly, Category = "Ammo Calculation Results")
+	float totalFleshDamage;
 
-	//maybe make an enum for the different bullet types
-
-
-	//allows the player to customise their bullet properties to suit what they want
 	UPROPERTY(EditDefaultsOnly, Category = "AmmoProperties")
 	float powderAmount;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AmmoProperties")
 	float bulletGrain;
 
-	//this will also affect recoil
-
-	//using these values make a somewhat realistic output value?
-	//could do in fps, joules and give it maths to calculate the overal properties below?
-
-
-	//depending on the different properties this affects the damage and penetration
-	//this will then later be on used for taking off body parts
-	UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")
-	float penetrationPower;
-
-	UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")
-	float fleshDamage;
-
-	//could be a cool idea?
-	UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")
-	float boneBraking;
-
-
-	
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AmmoProperties")
+	float bulletDiameterMM;
 };

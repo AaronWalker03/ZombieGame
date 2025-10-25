@@ -18,16 +18,71 @@ AWeapon::AWeapon()
 // Called when the game starts or when spawned
 void AWeapon::BeginPlay()
 {
-	Super::BeginPlay();
-	
+    Super::BeginPlay();
+
+    // Get default properties from the ammo BP/class
+    const AAmmunition* defaultAmmo = ammunitionType->GetDefaultObject<AAmmunition>();
+
+    float powder = defaultAmmo->powderAmount;
+    float grain = defaultAmmo->bulletGrain;
+    float diameter = defaultAmmo->bulletDiameterMM;
+
+    CalculateBallistics(powder, grain, diameter);
+
+}
+
+void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float bulletDiameterMM)
+{
+    float grainInKG = 0.00006479891;
+    float energyDensity = 4.05e6;
+    float effiency = 0.30;
+    float kP = 1e-6;
+    float kD = 0.01;
+    float tissueEffiency = 1.0;     // soft tissue multiplier
+    float expansion = 1.0; // 1.0 for FMJ, >1 for hollowpoint
+
+    // Convert mass
+    float bulletMass = bulletGrain * grainInKG;
+    float powderMass = powderAmount * grainInKG;
+
+    // Chemical energy in powder
+    float chemicalEnergy = powderMass * energyDensity;
+
+    // Muzzle energy (delivered)
+    float muzzleEnergy = effiency * chemicalEnergy;
+
+    // Frontal area (m^2)
+    float d_m = bulletDiameterMM * 0.001;
+    float area = PI * FMath::Square(d_m * 0.5);
+
+    // Sectional density (kg/m^2)
+    float sD = bulletMass / FMath::Max(area, 1e-12);
+
+    // Penetration power 
+    float pen = kP * (muzzleEnergy / FMath::Max(area, 1e-12)) * sD;
+
+    // Flesh damage
+    float flesh = kD * muzzleEnergy * expansion * tissueEffiency;
+
+    // Velocity (m/s)
+    bulletVelocity = 0.0;
+    if (bulletMass > 0.0)
+    {
+        bulletVelocity = FMath::Sqrt(2.0 * muzzleEnergy / bulletMass);
+    }
+
+    //final product
+    penetrationPower = pen;
+    fleshDamage = flesh;
+
+    UE_LOG(LogTemp, Warning, TEXT("Calculated Ballistics: Penetration = %f, FleshDamage = %f, bulletVelocity = %f"),
+        penetrationPower,
+        fleshDamage,
+        bulletVelocity);
 }
 
 void AWeapon::Shoot()
 {
-    //need to make it use designated ammo bp
-    //get damage info from designated ammo bp?
-    //
-
     APlayerController* PlayerController = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
     if (!PlayerController || !mesh) return;
 
@@ -38,25 +93,48 @@ void AWeapon::Shoot()
     FVector ShootDirection = CameraRotation.Vector();
 
     // Start from the muzzle socket
-    FVector Start = mesh->GetSocketLocation(TEXT("MuzzleFlashSocket"));
-    FVector End = Start + (ShootDirection * 10000.0f); // 10,000 units forward from socket
+    FVector MuzzleLocation = mesh->GetSocketLocation(TEXT("MuzzleFlashSocket"));
+    FRotator MuzzleRotation = ShootDirection.Rotation();
 
-    // Raycast
-    FHitResult Hit;
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(this);
-    Params.AddIgnoredActor(GetOwner());
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Owner = this;
+    SpawnParams.Instigator = GetInstigator();
 
-    bool bHit = GetWorld()->LineTraceSingleByChannel(
-        Hit,
-        Start,
-        End,
-        ECC_Visibility,
-        Params
-    );
+    
+    AAmmunition* SpawnedBullet = GetWorld()->SpawnActor<AAmmunition>(ammunitionType, MuzzleLocation, MuzzleRotation, SpawnParams);
+    if (SpawnedBullet)
+    {
+        SpawnedBullet->totalBulletVelocity = bulletVelocity;
+        SpawnedBullet->totalFleshDamage = fleshDamage;
+        SpawnedBullet->totalPenetrationPower = penetrationPower;
+
+        if (SpawnedBullet->bulletTip)
+        {
+            SpawnedBullet->bulletTip->SetSimulatePhysics(true);
+            SpawnedBullet->bulletTip->SetPhysicsLinearVelocity(ShootDirection * bulletVelocity);
+        }
+    }
+
+    //lets try projectile based first see what performance is like
+    // //if we do projectile we dont need to worry about calculating bullet drop physics will do that for us
+    // if projectiles are too computationally expensive then we need to do with line trace which is less expensive but need to do vector calculations for drop 
+    // will also need to calculate how fast the line trace can do shit because of velocity
+    //// Raycast
+    //FHitResult Hit;
+    //FCollisionQueryParams Params;
+    //Params.AddIgnoredActor(this);
+    //Params.AddIgnoredActor(GetOwner());
+
+    //bool bHit = GetWorld()->LineTraceSingleByChannel(
+    //    Hit,
+    //    Start,
+    //    End,
+    //    ECC_Visibility,
+    //    Params
+   // );
 
     // Debug line
-    DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1.0f, 0, 1.0f);
+   // DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1.0f, 0, 1.0f);
 
     //if (MuzzleFlash)
     //{

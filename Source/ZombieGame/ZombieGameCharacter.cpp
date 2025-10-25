@@ -50,13 +50,10 @@ AZombieGameCharacter::AZombieGameCharacter()
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	GetCharacterMovement()->AirControl = 0.5f;
 
-	//Initialize the player's Health
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
 
-	//Initialize projectile class
-
-	//get rid of this? and use weapon script instead?
+	//GET RID OF THIS AND REPLACE WITH MY SUPERIOR WEAPON SCRIPT WHICH USES THE BOOLETS
 	ProjectileClass = AZombieGameProjectile::StaticClass();
 
 	//Initialize fire rate
@@ -69,6 +66,9 @@ void AZombieGameCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	SpawnWeapon();
+
+	//this fucking works btw just need to bind it to keybind
+	EquippedWeapon->Shoot();
 }
 
 void AZombieGameCharacter::SpawnWeapon()

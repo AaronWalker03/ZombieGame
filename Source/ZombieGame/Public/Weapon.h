@@ -41,9 +41,26 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	USoundBase* FireSound;*/
 
+	UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")
+	float bulletVelocity;
+
+	UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")
+	float penetrationPower;
+
+	UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")
+	float fleshDamage;
+
+
+	//could be a cool idea?
+	/*UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")
+	float boneBraking;*/
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void CalculateBallistics(float powder, float grain, float mm);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Shoot();

@@ -34,6 +34,12 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UStaticMeshComponent* CubeMesh;
+
+	 UPROPERTY(EditDefaultsOnly, Category="Effects")
+    UParticleSystem* BloodFX;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
 	float damage;
 

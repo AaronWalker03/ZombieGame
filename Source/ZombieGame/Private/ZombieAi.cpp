@@ -18,6 +18,17 @@ AZombieAi::AZombieAi()
     pawnSensingComp = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComp"));
 
     CurrentState = EZombieState::ZS_Idle;
+
+    CubeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HeadCube"));
+    CubeMesh->SetupAttachment(GetMesh(), FName("head")); // attach to head socket
+
+    // Load a basic cube mesh from the engine content
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeAsset(TEXT("/Engine/BasicShapes/Cube.Cube"));
+    if (CubeAsset.Succeeded())
+    {
+        CubeMesh->SetStaticMesh(CubeAsset.Object);
+        CubeMesh->SetRelativeScale3D(FVector(0.25f, 0.25f, 0.25f));  // Scale down
+    }
 }
 
 // Called when the game starts or when spawned
@@ -48,6 +59,25 @@ void AZombieAi::BeginPlay()
     {
         pawnSensingComp->OnSeePawn.AddDynamic(this, &AZombieAi::HandleSeePlayer);
     }
+
+    if (pawnSensingComp)
+    {
+        pawnSensingComp->OnSeePawn.AddDynamic(this, &AZombieAi::HandleSeePlayer);
+    }
+
+    CubeMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+    CubeMesh->SetSimulatePhysics(true);
+    CubeMesh->AddImpulse(FVector(0.f, -100.f, 300.f), NAME_None, true); // small pop-up impulse
+
+    // Spawn a blood particle effect at the head socket location
+    if (BloodFX)
+    {
+        FVector SocketLocation = GetMesh()->GetSocketLocation(FName("head"));
+        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodFX, SocketLocation, FRotator::ZeroRotator, FVector(1.f), true);
+    }
+
+    // Optional: remove cube after a few seconds
+   // CubeMesh->SetLifeSpan(5.0f);
 }
 
 // Called every frame

@@ -68,7 +68,7 @@ void AZombieGameCharacter::BeginPlay()
 	SpawnWeapon();
 
 	//this fucking works btw just need to bind it to keybind
-	EquippedWeapon->Shoot();
+	//EquippedWeapon->Shoot();
 }
 
 void AZombieGameCharacter::SpawnWeapon()
@@ -169,9 +169,6 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::LookInput);
 
-		//TODO: ADD KEYBINDS FOR THIS 
-		//REPLACE PRIOR CODE THAT DOES SHOOTING LOGIC AND MAKE SURE IT ONLY USES THIS
-		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::OnFire);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::OnAim);
 	}
 	else
@@ -180,7 +177,7 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	}
 
 	// Handle firing projectiles
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AZombieGameCharacter::StartFire);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AZombieGameCharacter::OnFire);
 }
 
 //logic that gets sent over to weapon class
@@ -194,33 +191,34 @@ void AZombieGameCharacter::OnAim()
 	EquippedWeapon->Aim();
 }
 
-void AZombieGameCharacter::StartFire()
-{
-	if (!bIsFiringWeapon)
-	{
-		bIsFiringWeapon = true;
-		UWorld* World = GetWorld();
-		World->GetTimerManager().SetTimer(FiringTimer, this, &AZombieGameCharacter::StopFire, FireRate, false);
-		HandleFire();
-	}
-}
-
-void AZombieGameCharacter::StopFire()
-{
-	bIsFiringWeapon = false;
-}
-
-void AZombieGameCharacter::HandleFire_Implementation()
-{
-	FVector spawnLocation = GetActorLocation() + (GetActorRotation().Vector() * 100.0f) + (GetActorUpVector() * 50.0f);
-	FRotator spawnRotation = GetActorRotation();
-
-	FActorSpawnParameters spawnParameters;
-	spawnParameters.Instigator = GetInstigator();
-	spawnParameters.Owner = this;
-
-	AZombieGameProjectile* spawnedProjectile = GetWorld()->SpawnActor<AZombieGameProjectile>(spawnLocation, spawnRotation, spawnParameters);
-}
+//this no use anymore 
+//void AZombieGameCharacter::StartFire()
+//{
+//	if (!bIsFiringWeapon)
+//	{
+//		bIsFiringWeapon = true;
+//		UWorld* World = GetWorld();
+//		World->GetTimerManager().SetTimer(FiringTimer, this, &AZombieGameCharacter::StopFire, FireRate, false);
+//		HandleFire();
+//	}
+//}
+//
+//void AZombieGameCharacter::StopFire()
+//{
+//	bIsFiringWeapon = false;
+//}
+//
+//void AZombieGameCharacter::HandleFire_Implementation()
+//{
+//	FVector spawnLocation = GetActorLocation() + (GetActorRotation().Vector() * 100.0f) + (GetActorUpVector() * 50.0f);
+//	FRotator spawnRotation = GetActorRotation();
+//
+//	FActorSpawnParameters spawnParameters;
+//	spawnParameters.Instigator = GetInstigator();
+//	spawnParameters.Owner = this;
+//
+//	AZombieGameProjectile* spawnedProjectile = GetWorld()->SpawnActor<AZombieGameProjectile>(spawnLocation, spawnRotation, spawnParameters);
+//}
 
 void AZombieGameCharacter::SetCurrentHealth(float healthValue)
 {

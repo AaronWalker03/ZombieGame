@@ -92,8 +92,8 @@ void AWeapon::Shoot()
     PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
     FVector ShootDirection = CameraRotation.Vector();
 
-    // Start from the muzzle socket
-    FVector MuzzleLocation = mesh->GetSocketLocation(TEXT("MuzzleFlashSocket"));
+    // NOT ACTUALLY SHOOTING FROM NOZZLE FOR SOME REASON
+    FVector MuzzleLocation = mesh->GetSocketLocation(TEXT("Muzzle"));
     FRotator MuzzleRotation = ShootDirection.Rotation();
 
     FActorSpawnParameters SpawnParams;
@@ -116,7 +116,7 @@ void AWeapon::Shoot()
     }
 
     //lets try projectile based first see what performance is like
-    // //if we do projectile we dont need to worry about calculating bullet drop physics will do that for us
+    // //if we do projectile we dont need to worry about calculating bullet drop physics, will do that for us
     // if projectiles are too computationally expensive then we need to do with line trace which is less expensive but need to do vector calculations for drop 
     // will also need to calculate how fast the line trace can do shit because of velocity
     //// Raycast

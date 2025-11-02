@@ -28,6 +28,10 @@ class ZOMBIEGAME_API AZombieAi : public ACharacter
 
 	//maybe add infection? 
 
+
+
+	//implement damage and body part damage
+
 public:
 	AZombieAi();
 

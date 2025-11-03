@@ -151,16 +151,16 @@ protected:
 	bool bIsFiringWeapon;
 
 	/** Function for beginning weapon fire.*/
-	UFUNCTION(BlueprintCallable, Category = "Gameplay")
-	void StartFire();
+	//UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	//void StartFire();
 
-	/** Function for ending weapon fire. Once this is called, the player can use StartFire again.*/
-	UFUNCTION(BlueprintCallable, Category = "Gameplay")
-	void StopFire();
+	///** Function for ending weapon fire. Once this is called, the player can use StartFire again.*/
+	//UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	//void StopFire();
 
-	/** Server function for spawning projectiles.*/
-	UFUNCTION(Server, Reliable)
-	void HandleFire();
+	///** Server function for spawning projectiles.*/
+	//UFUNCTION(Server, Reliable)
+	//void HandleFire();
 
 	/** A timer handle used for providing the fire rate delay in-between spawns.*/
 	FTimerHandle FiringTimer;

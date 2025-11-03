@@ -33,9 +33,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoMesh")
 	UStaticMeshComponent* bulletTip;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoMesh")
-	UStaticMeshComponent* casing;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoMesh")
+	UStaticMeshComponent* casing;*/
 
+	//for velocity should probably implement barrel length as it does have a massive affect
 	UPROPERTY(EditDefaultsOnly, Category = "Ammo Calculation Results")
 	float totalBulletVelocity;
 	UPROPERTY(EditDefaultsOnly, Category = "Ammo Calculation Results")

@@ -83,23 +83,20 @@ void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float b
 
 void AWeapon::Shoot()
 {
-    APlayerController* PlayerController = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
-    if (!PlayerController || !mesh) return;
+    //Now shoots at socket however the bullet isnt centred
 
-    // Get direction from player's view
-    FVector CameraLocation;
-    FRotator CameraRotation;
-    PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
-    FVector ShootDirection = CameraRotation.Vector();
+    if (!ammunitionType) return;
+    if (!mesh) return;
 
-    // NOT ACTUALLY SHOOTING FROM NOZZLE FOR SOME REASON
-    FVector MuzzleLocation = mesh->GetSocketLocation(TEXT("Muzzle"));
-    FRotator MuzzleRotation = ShootDirection.Rotation();
+    const FName MuzzleSocketName = TEXT("Muzzle"); 
+    const FVector MuzzleLocation = mesh->GetSocketLocation(MuzzleSocketName); 
+    const FRotator MuzzleRotation = mesh->GetSocketRotation(MuzzleSocketName);
 
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = this;
     SpawnParams.Instigator = GetInstigator();
 
+    FVector LaunchDirection = MuzzleRotation.Vector();
     
     AAmmunition* SpawnedBullet = GetWorld()->SpawnActor<AAmmunition>(ammunitionType, MuzzleLocation, MuzzleRotation, SpawnParams);
     if (SpawnedBullet)
@@ -111,30 +108,11 @@ void AWeapon::Shoot()
         if (SpawnedBullet->bulletTip)
         {
             SpawnedBullet->bulletTip->SetSimulatePhysics(true);
-            SpawnedBullet->bulletTip->SetPhysicsLinearVelocity(ShootDirection * bulletVelocity);
+            SpawnedBullet->bulletTip->SetPhysicsLinearVelocity(LaunchDirection * bulletVelocity);
         }
+
     }
 
-    //lets try projectile based first see what performance is like
-    // //if we do projectile we dont need to worry about calculating bullet drop physics, will do that for us
-    // if projectiles are too computationally expensive then we need to do with line trace which is less expensive but need to do vector calculations for drop 
-    // will also need to calculate how fast the line trace can do shit because of velocity
-    //// Raycast
-    //FHitResult Hit;
-    //FCollisionQueryParams Params;
-    //Params.AddIgnoredActor(this);
-    //Params.AddIgnoredActor(GetOwner());
-
-    //bool bHit = GetWorld()->LineTraceSingleByChannel(
-    //    Hit,
-    //    Start,
-    //    End,
-    //    ECC_Visibility,
-    //    Params
-   // );
-
-    // Debug line
-   // DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1.0f, 0, 1.0f);
 
     //if (MuzzleFlash)
     //{

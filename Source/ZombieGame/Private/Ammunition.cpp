@@ -14,8 +14,8 @@ AAmmunition::AAmmunition()
 	bulletTip->SetupAttachment(RootComponent);
 
 	// Casing mesh
-	casing = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Casing"));
-	casing->SetupAttachment(RootComponent);
+	/*casing = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Casing"));
+	casing->SetupAttachment(RootComponent);*/
 }
 
 // Called when the game starts or when spawned

@@ -35,7 +35,7 @@ void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float b
 {
     float grainInKG = 0.00006479891;
     float energyDensity = 4.05e6;
-    float effiency = 0.30;
+    float effiency = 0.35;
     float kP = 1e-6;
     float kD = 0.01;
     float tissueEffiency = 1.0;     // soft tissue multiplier
@@ -68,7 +68,7 @@ void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float b
     bulletVelocity = 0.0;
     if (bulletMass > 0.0)
     {
-        bulletVelocity = FMath::Sqrt(2.0 * muzzleEnergy / bulletMass);
+        bulletVelocity = FMath::Sqrt(2.0f * muzzleEnergy / bulletMass) * 100.0f; // convert m/s to cm/s
     }
 
     //final product
@@ -91,26 +91,18 @@ void AWeapon::Shoot()
     const FName MuzzleSocketName = TEXT("Muzzle"); 
     const FVector MuzzleLocation = mesh->GetSocketLocation(MuzzleSocketName); 
     const FRotator MuzzleRotation = mesh->GetSocketRotation(MuzzleSocketName);
+    FVector LaunchDirection = MuzzleRotation.Vector();
 
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = this;
     SpawnParams.Instigator = GetInstigator();
-
-    FVector LaunchDirection = MuzzleRotation.Vector();
     
-    AAmmunition* SpawnedBullet = GetWorld()->SpawnActor<AAmmunition>(ammunitionType, MuzzleLocation, MuzzleRotation, SpawnParams);
-    if (SpawnedBullet)
+    AAmmunition* Bullet = GetWorld()->SpawnActor<AAmmunition>(ammunitionType, MuzzleLocation, MuzzleRotation, SpawnParams);
+    if (Bullet)
     {
-        SpawnedBullet->totalBulletVelocity = bulletVelocity;
-        SpawnedBullet->totalFleshDamage = fleshDamage;
-        SpawnedBullet->totalPenetrationPower = penetrationPower;
-
-        if (SpawnedBullet->bulletTip)
-        {
-            SpawnedBullet->bulletTip->SetSimulatePhysics(true);
-            SpawnedBullet->bulletTip->SetPhysicsLinearVelocity(LaunchDirection * bulletVelocity);
-        }
-
+        Bullet->velocity = LaunchDirection * bulletVelocity;
+        Bullet->fleshDamage = fleshDamage;
+        Bullet->penetrationPower = penetrationPower;
     }
 
 

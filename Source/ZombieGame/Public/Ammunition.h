@@ -30,22 +30,27 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoMesh")
-	UStaticMeshComponent* bulletTip;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoMesh")
+	UStaticMeshComponent* bulletTip;*/
 
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoMesh")
 	UStaticMeshComponent* casing;*/
 
 	//for velocity should probably implement barrel length as it does have a massive affect
 	UPROPERTY(EditDefaultsOnly, Category = "Ammo Calculation Results")
-	float totalBulletVelocity;
+	FVector velocity;
 	UPROPERTY(EditDefaultsOnly, Category = "Ammo Calculation Results")
-	float totalPenetrationPower;
+	float penetrationPower;
 	UPROPERTY(EditDefaultsOnly, Category = "Ammo Calculation Results")
-	float totalFleshDamage;
+	float fleshDamage;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AmmoProperties")
 	float powderAmount;
+
+	float lifetime = 5.0f; // seconds before despawn
+	float gravity = -980.f;
+
+	FVector previousPosition;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AmmoProperties")
 	float bulletGrain;

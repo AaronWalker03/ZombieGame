@@ -34,7 +34,7 @@ AZombieAi::AZombieAi()
 // Called when the game starts or when spawned
 void AZombieAi::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
     pawnSensingComp->SensingInterval = 0.5f;
     pawnSensingComp->bSeePawns = true;
@@ -54,27 +54,26 @@ void AZombieAi::BeginPlay()
     // Apply sensing component settings
     pawnSensingComp->SightRadius = visionDetectionRange;
     pawnSensingComp->SetPeripheralVisionAngle(visionDetectionAngle);
-	
-    if (pawnSensingComp)
-    {
-        pawnSensingComp->OnSeePawn.AddDynamic(this, &AZombieAi::HandleSeePlayer);
-    }
 
     if (pawnSensingComp)
     {
         pawnSensingComp->OnSeePawn.AddDynamic(this, &AZombieAi::HandleSeePlayer);
     }
+
+   /* if (pawnSensingComp)
+    {
+        pawnSensingComp->OnSeePawn.AddDynamic(this, &AZombieAi::HandleSeePlayer);
+    }*/
 
     CubeMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
     CubeMesh->SetSimulatePhysics(true);
     CubeMesh->AddImpulse(FVector(0.f, -100.f, 300.f), NAME_None, true); // small pop-up impulse
 
     // Spawn a blood particle effect at the head socket location
-    if (BloodFX)
-    {
-        FVector SocketLocation = GetMesh()->GetSocketLocation(FName("head"));
-        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodFX, SocketLocation, FRotator::ZeroRotator, FVector(1.f), true);
-    }
+
+    /*FVector SocketLocation = GetMesh()->GetSocketLocation(FName("head"));
+    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodFX, SocketLocation, FRotator::ZeroRotator, FVector(1.f), true);*/
+
 
     // Optional: remove cube after a few seconds
    // CubeMesh->SetLifeSpan(5.0f);

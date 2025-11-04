@@ -33,52 +33,51 @@ void AWeapon::BeginPlay()
 
 void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float bulletDiameterMM)
 {
+    bulletVelocity = 0.0;
     float grainInKG = 0.00006479891;
     float energyDensity = 4.05e6;
     float effiency = 0.35;
-    float kP = 1e-6;
-    float kD = 0.01;
-    float tissueEffiency = 1.0;     // soft tissue multiplier
-    float expansion = 1.0; // 1.0 for FMJ, >1 for hollowpoint
+
+    float C_pen = 0.00108f;
+    float constructionFactor = 1.0f;
+
+    float stopFactor = 0.9f;
+    float passThroughFactor = 0.2f;
+    float damageScale = 0.01f;
 
     // Convert mass
-    float bulletMass = bulletGrain * grainInKG;
-    float powderMass = powderAmount * grainInKG;
+    float bulletMassKG = bulletGrain * grainInKG;
+    float powderMassKG = powderAmount * grainInKG;
+    float diameter_m = bulletDiameterMM * 0.001f;
 
     // Chemical energy in powder
-    float chemicalEnergy = powderMass * energyDensity;
+    float chemicalEnergy = powderMassKG * energyDensity;
 
     // Muzzle energy (delivered)
     float muzzleEnergy = effiency * chemicalEnergy;
 
-    // Frontal area (m^2)
-    float d_m = bulletDiameterMM * 0.001;
-    float area = PI * FMath::Square(d_m * 0.5);
+
+    float area = PI * FMath::Square(diameter_m * 0.5);
 
     // Sectional density (kg/m^2)
-    float sD = bulletMass / FMath::Max(area, 1e-12);
+    float sectionalDensity = bulletMassKG / FMath::Max(area, 1e-12);
 
-    // Penetration power 
-    float pen = kP * (muzzleEnergy / FMath::Max(area, 1e-12)) * sD;
+    bulletVelocity = FMath::Sqrt(2.0f * muzzleEnergy / bulletMassKG) * 100.0f; // convert m/s to cm/s
 
-    // Flesh damage
-    float flesh = kD * muzzleEnergy * expansion * tissueEffiency;
 
-    // Velocity (m/s)
-    bulletVelocity = 0.0;
-    if (bulletMass > 0.0)
-    {
-        bulletVelocity = FMath::Sqrt(2.0f * muzzleEnergy / bulletMass) * 100.0f; // convert m/s to cm/s
-    }
 
-    //final product
-    penetrationPower = pen;
-    fleshDamage = flesh;
+    float KE_J = 0.5f * bulletMassKG * bulletVelocity;
 
-    UE_LOG(LogTemp, Warning, TEXT("Calculated Ballistics: Penetration = %f, FleshDamage = %f, bulletVelocity = %f"),
-        penetrationPower,
-        fleshDamage,
-        bulletVelocity);
+    penetrationPower = C_pen * KE_J * sectionalDensity * constructionFactor;
+    float depositedIfStopped_J = KE_J * stopFactor;
+    fleshDamage = depositedIfStopped_J * damageScale;
+
+
+    //this jsut for reading in m/s not cm/s
+    float bulletVelocityMS = bulletVelocity / 100;
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("Ballistics: E=%.1fJ, vel=%.2f m/s, Penetration=%.2f mm, FleshDamage(if stopped)=%.2f HP"), KE_J, bulletVelocityMS, penetrationPower, fleshDamage);
 }
 
 void AWeapon::Shoot()

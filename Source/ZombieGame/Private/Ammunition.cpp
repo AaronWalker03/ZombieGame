@@ -29,16 +29,6 @@ void AAmmunition::BeginPlay()
 // Called every frame
 void AAmmunition::Tick(float DeltaTime)
 {
-
-
-    //if has enough penetration keep going through
-
-
-
-
-
-
-
     lifetime -= DeltaTime;
     if (lifetime <= 0.f)
     {

@@ -38,18 +38,8 @@ void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float b
     float energyDensity = 4.05e6;
     float effiency = 0.35;
 
-    float C_pen = 0.00108f;
-    float constructionFactor = 1.0f;
-
-    float stopFactor = 0.9f;
-    float damageScale = 0.02f;
-
-    // Gelatin calibration: 7.62×39 FMJ (123 gr, ~760 m/s) penetrates ~30 cm of 10% gel
-    const float gelReferenceDepth_m = 0.30f;  // 30 cm gel penetration at reference KE
-    const float gelBlockThickness_m = 0.30f;  // Target body block thickness (30 cm)
-
     // Convert mass
-    float bulletMassKG = bulletGrain * grainInKG;
+    bulletMassKG = bulletGrain * grainInKG;
     float powderMassKG = powderAmount * grainInKG;
     float diameter_m = bulletDiameterMM * 0.001f;
 
@@ -64,41 +54,14 @@ void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float b
     // Sectional density (kg/m^2)
     float sectionalDensity = bulletMassKG / FMath::Max(area, 1e-12);
 
-    float velocity_m_s = 0.0f;
+    velocityms = FMath::Sqrt(2.0f * muzzleEnergy / bulletMassKG); //m/s used for energy calculations
+    float KE_J = 0.5f * bulletMassKG * FMath::Square(velocityms);
 
-    velocity_m_s = FMath::Sqrt(2.0f * muzzleEnergy / bulletMassKG); //m/s used for energy calculations
+    bulletVelocity = velocityms * 100.0f;// for gameplay
 
-    bulletVelocity = velocity_m_s * 100.0f;// for gameplay
+    energyJoules = KE_J;
 
-    float KE_J = 0.5f * bulletMassKG * FMath::Square(velocity_m_s);
-
-    float refVelocity_m_s = 760.0f;
-    float refKE_J = 0.5f * bulletMassKG * FMath::Square(refVelocity_m_s);
-    float gelEnergyPerMeter_Jpm = FMath::Max(refKE_J / gelReferenceDepth_m, 1.0f);
-
-    float penetration_m = KE_J / gelEnergyPerMeter_Jpm;
-    float penetration_cm = penetration_m * 100.0f; // Unreal world units
-
-    // --- deposited energy ---
-    float depositedEnergy_J = 0.0f;
-
-    if (penetration_m >= gelBlockThickness_m)
-    {
-        // Bullet exits the block: energy lost inside the block = J per meter * thickness (meters)
-        depositedEnergy_J = gelEnergyPerMeter_Jpm * gelBlockThickness_m;
-    }
-    else
-    {
-        // Bullet stops inside the block: all kinetic energy is deposited
-        depositedEnergy_J = KE_J;
-    }
-
-    penetrationPower = penetration_cm;
-    fleshDamage = depositedEnergy_J * damageScale;
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("Ballistics: E=%.1fJ, vel=%.2f m/s (%.0f cm/s), Penetration=%.1f cm, DepositedE=%.1fJ, FleshDamage=%.2f HP"),
-        KE_J, velocity_m_s, bulletVelocity, penetration_cm, depositedEnergy_J, fleshDamage);
+    UE_LOG(LogTemp, Warning, TEXT("Ballistics: E=%.1fJ, vel=%.2f m/s (%.0f cm/s)"), KE_J, velocityms, bulletVelocity);
 }
 
 void AWeapon::Shoot()
@@ -119,8 +82,8 @@ void AWeapon::Shoot()
     if (Bullet)
     {
         Bullet->velocity = LaunchDirection * bulletVelocity;
-        Bullet->fleshDamage = fleshDamage;
-        Bullet->penetrationPower = penetrationPower;
+        Bullet->energyJoules = energyJoules;
+        Bullet->bulletMassKG = bulletMassKG;
     }
 
 

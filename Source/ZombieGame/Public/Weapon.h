@@ -41,15 +41,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	USoundBase* FireSound;*/
 
-	UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")
 	float bulletVelocity;
+	float energyJoules;
 
-	UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")
-	float penetrationPower;
-
-	UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")
-	float fleshDamage;
-
+	float velocityms;
+	float bulletMassKG;
 
 	//could be a cool idea?
 	/*UPROPERTY(BlueprintReadOnly, Category = "AmmoProperties")

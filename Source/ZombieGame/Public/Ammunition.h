@@ -25,6 +25,8 @@ protected:
 	virtual void BeginPlay() override;
 
 	
+
+	void PenetrationTest(float KE_J);
 	
 public:	
 	// Called every frame
@@ -40,17 +42,20 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Ammo Calculation Results")
 	FVector velocity;
 	UPROPERTY(EditDefaultsOnly, Category = "Ammo Calculation Results")
-	float penetrationPower;
-	UPROPERTY(EditDefaultsOnly, Category = "Ammo Calculation Results")
+	float energyJoules;
+
 	float fleshDamage;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AmmoProperties")
 	float powderAmount;
 
+	float velocityms;
 	float lifetime = 5.0f; // seconds before despawn
 	float gravity = -980.f;
 
 	FVector previousPosition;
+
+	float bulletMassKG;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AmmoProperties")
 	float bulletGrain;

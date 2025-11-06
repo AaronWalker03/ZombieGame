@@ -7,31 +7,110 @@
 #include "AIController.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
-
+#include "GameFramework/DamageType.h"
+#include "Engine/DamageEvents.h"
 
 // Sets default values
 AZombieAi::AZombieAi()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
 
     pawnSensingComp = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComp"));
 
+    health = 100.0f;
+
     CurrentState = EZombieState::ZS_Idle;
 
-    CubeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HeadCube"));
-    CubeMesh->SetupAttachment(GetMesh(), FName("head")); // attach to head socket
+    SetBodyparts();
+}
+
+void AZombieAi::SetBodyparts()
+{
+    HeadMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HeadMesh"));
+    HeadMesh->SetupAttachment(GetMesh(), FName("head")); // attach to head socket
+
+    LUpArm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LUpArm"));
+    LUpArm->SetupAttachment(GetMesh(), FName("upperarm_l"));
+
+    RForearm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RForearm"));
+    RForearm->SetupAttachment(GetMesh(), FName("lowerarm_r"));
+
+    LHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LHand"));
+    LHand->SetupAttachment(GetMesh(), FName("hand_l"));
+
+    RUpArm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RUpArm"));
+    RUpArm->SetupAttachment(GetMesh(), FName("upperarm_r"));
+
+    LForearm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LForearm"));
+    LForearm->SetupAttachment(GetMesh(), FName("lowerarm_l"));
+
+    RHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RHand"));
+    RHand->SetupAttachment(GetMesh(), FName("hand_r"));
+
+    LThigh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LThigh"));
+    LThigh->SetupAttachment(GetMesh(), FName("thigh_l"));
+
+    LCalf = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LCalf"));
+    LCalf->SetupAttachment(GetMesh(), FName("calf_l"));
+
+    LFoot = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LFoot"));
+    LFoot->SetupAttachment(GetMesh(), FName("foot_l"));
+
+    RThigh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RThigh"));
+    RThigh->SetupAttachment(GetMesh(), FName("thigh_r"));
+
+    RCalf = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RCalf"));
+    RCalf->SetupAttachment(GetMesh(), FName("calf_r"));
+
+    RFoot = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RFoot"));
+    RFoot->SetupAttachment(GetMesh(), FName("foot_r"));
+
+    GetMesh()->SetVisibility(false);
 
     // Load a basic cube mesh from the engine content
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeAsset(TEXT("/Engine/BasicShapes/Cube.Cube"));
-    if (CubeAsset.Succeeded())
-    {
-        CubeMesh->SetStaticMesh(CubeAsset.Object);
-        CubeMesh->SetRelativeScale3D(FVector(0.25f, 0.25f, 0.25f));  // Scale down
-    }
+
+    HeadMesh->SetStaticMesh(CubeAsset.Object);
+    HeadMesh->SetRelativeScale3D(FVector(0.25f, 0.25f, 0.25f));  // Scale down
+
+    LUpArm->SetStaticMesh(CubeAsset.Object);
+    LUpArm->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+
+    LForearm->SetStaticMesh(CubeAsset.Object);
+    LForearm->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+
+    LHand->SetStaticMesh(CubeAsset.Object);
+    LHand->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+
+    RUpArm->SetStaticMesh(CubeAsset.Object);
+    RUpArm->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+
+    RForearm->SetStaticMesh(CubeAsset.Object);
+    RForearm->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+
+    RHand->SetStaticMesh(CubeAsset.Object);
+    RHand->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+
+    LThigh->SetStaticMesh(CubeAsset.Object);
+    LThigh->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+
+    LCalf->SetStaticMesh(CubeAsset.Object);
+    LCalf->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+
+    LFoot->SetStaticMesh(CubeAsset.Object);
+    LFoot->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+
+    RThigh->SetStaticMesh(CubeAsset.Object);
+    RThigh->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+
+    RCalf->SetStaticMesh(CubeAsset.Object);
+    RCalf->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+
+    RFoot->SetStaticMesh(CubeAsset.Object);
+    RFoot->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
 }
 
-// Called when the game starts or when spawned
 void AZombieAi::BeginPlay()
 {
     Super::BeginPlay();
@@ -59,25 +138,38 @@ void AZombieAi::BeginPlay()
     {
         pawnSensingComp->OnSeePawn.AddDynamic(this, &AZombieAi::HandleSeePlayer);
     }
-
-   /* if (pawnSensingComp)
-    {
-        pawnSensingComp->OnSeePawn.AddDynamic(this, &AZombieAi::HandleSeePlayer);
-    }*/
-
-    CubeMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-    CubeMesh->SetSimulatePhysics(true);
-    CubeMesh->AddImpulse(FVector(0.f, -100.f, 300.f), NAME_None, true); // small pop-up impulse
-
-    // Spawn a blood particle effect at the head socket location
-
-    /*FVector SocketLocation = GetMesh()->GetSocketLocation(FName("head"));
-    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodFX, SocketLocation, FRotator::ZeroRotator, FVector(1.f), true);*/
-
-
-    // Optional: remove cube after a few seconds
-   // CubeMesh->SetLifeSpan(5.0f);
 }
+
+
+//maybe make each limb have an amount of health?
+//with amount of blood in it?
+
+void AZombieAi::TakeDamage()
+{
+    
+
+      
+    
+}
+
+void AZombieAi::DismemberLimb(FName BoneName)
+{
+    /* CubeMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+      CubeMesh->SetSimulatePhysics(true);
+      CubeMesh->AddImpulse(FVector(0.f, -100.f, 300.f), NAME_None, true);*/ // small pop-up impulse
+
+      // Spawn a blood particle effect at the head socket location
+
+      /*FVector SocketLocation = GetMesh()->GetSocketLocation(FName("head"));
+      UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodFX, SocketLocation, FRotator::ZeroRotator, FVector(1.f), true);*/
+
+
+      // Optional: remove cube after a few seconds
+     // CubeMesh->SetLifeSpan(5.0f);
+
+   
+}
+
 
 // Called every frame
 void AZombieAi::Tick(float DeltaTime)

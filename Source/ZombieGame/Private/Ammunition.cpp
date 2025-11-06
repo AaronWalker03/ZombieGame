@@ -26,6 +26,43 @@ void AAmmunition::BeginPlay()
 	previousPosition = GetActorLocation();
 }
 
+void AAmmunition::PenetrationTest(float KE_J)
+{
+    float damageScale = 0.02f;
+
+    //get reference of body part?
+
+    //initially done with gel block to imitate flesh
+    float gelReferenceDepth_m = 0.30f;  
+    float gelBlockThickness_m = 0.30f;  
+
+    float refKE_J = 0.5f * bulletMassKG * FMath::Square(velocityms);
+    float gelEnergyPerMeter_Jpm = FMath::Max(refKE_J / gelReferenceDepth_m, 1.0f);
+
+    float penetration_m = KE_J / gelEnergyPerMeter_Jpm;
+    float penetration_cm = penetration_m * 100.0f; // Unreal world units
+
+    float depositedEnergy_J = 0.0f;
+
+    if (penetration_m >= gelBlockThickness_m)
+    {
+        // Bullet exits the block: energy lost inside the block = J per meter * thickness (meters)
+        depositedEnergy_J = gelEnergyPerMeter_Jpm * gelBlockThickness_m;
+    }
+    else
+    {
+        // Bullet stops inside the block: all kinetic energy is deposited
+        depositedEnergy_J = KE_J;
+    }
+
+
+    fleshDamage = depositedEnergy_J * damageScale;
+
+
+
+    //then do damage here?
+}
+
 // Called every frame
 void AAmmunition::Tick(float DeltaTime)
 {
@@ -64,21 +101,15 @@ void AAmmunition::Tick(float DeltaTime)
         // Immediate, simple hit handling — apply point damage if actor exists
         if (Hit.GetActor())
         {
-            UGameplayStatics::ApplyPointDamage(
-                Hit.GetActor(),
-                fleshDamage,                       // damage amount
-                velocity.GetSafeNormal(),          // shot direction
-                Hit,
-                GetInstigatorController(),
-                this,
-                nullptr                            // optional damage type class
-            );
+           //if hit check penetration
+            
         }
 
         // Place an impact debug point
         DrawDebugPoint(GetWorld(), Hit.ImpactPoint, 8.0f, FColor::Red, false, 2.0f);
 
         // Destroy bullet immediately on first hit
+        //additionally check penetration, if can go through keep going dont destroy
         Destroy();
         return;
     }
@@ -92,6 +123,6 @@ void AAmmunition::Tick(float DeltaTime)
 
 
 	//could do sound of each bullet wizzing past in here?
-	//Play whistling bullet sound with attenuation and doppler effect
+	//wizzing bullet sound with attenuation and doppler effect
 	//Stop playing sound once bullet impacts surface or gets too far away
 }

@@ -38,8 +38,46 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UStaticMeshComponent* CubeMesh;
+	void SetBodyparts();
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* HeadMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* LUpArm;
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* LForearm;
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* LHand;
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* RUpArm;
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* RForearm;
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* RHand;
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* LThigh;
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* LCalf;
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* LFoot;
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* RThigh;
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* RCalf;
+
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* RFoot;
 
 	 UPROPERTY(EditDefaultsOnly, Category="Effects")
     UParticleSystem* BloodFX;
@@ -49,6 +87,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
 	float health;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
+	float bloodAmount; //in litres?
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
 	float movementSpeed;
@@ -77,6 +118,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	APawn* TargetPlayer;
 
+	void TakeDamage();
+
+	UFUNCTION()
+	void DismemberLimb(FName BoneName);
 
 	//DO NOT FUCKING TOUCH THESE
 	UFUNCTION()

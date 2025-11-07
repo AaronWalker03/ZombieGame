@@ -26,7 +26,7 @@ protected:
 
 	
 
-	void PenetrationTest(float KE_J);
+	void PenetrationTest(float KE_J, AActor* HitActor, UPrimitiveComponent* HitComponent, const FVector& HitLocation);
 	
 public:	
 	// Called every frame

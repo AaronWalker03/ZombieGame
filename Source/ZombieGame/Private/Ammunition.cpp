@@ -26,9 +26,34 @@ void AAmmunition::BeginPlay()
 	previousPosition = GetActorLocation();
 }
 
-void AAmmunition::PenetrationTest(float KE_J)
+void AAmmunition::PenetrationTest(float KE_J, AActor* HitActor, UPrimitiveComponent* HitComponent, const FVector& HitLocation)
 {
     float damageScale = 0.02f;
+
+
+    if (HitActor)
+    {
+        FString ActorName = HitActor->GetName();
+        FString ComponentName = HitComponent ? HitComponent->GetName() : TEXT("None");
+
+        // If this is a skeletal mesh, try to get the bone name
+        FString BoneName = TEXT("N/A");
+        if (USkeletalMeshComponent* SkelComp = Cast<USkeletalMeshComponent>(HitComponent))
+        {
+            // Get the closest bone to the impact location
+            FName ClosestBone = SkelComp->FindClosestBone(HitLocation);
+            if (ClosestBone != NAME_None)
+            {
+                BoneName = ClosestBone.ToString();
+            }
+        }
+
+        UE_LOG(LogTemp, Warning, TEXT("[PenetrationTest] Hit Actor: %s | Component: %s | Bone: %s | Location: %s"),
+            *ActorName,
+            *ComponentName,
+            *BoneName,
+            *HitLocation.ToString());
+    }
 
     //get reference of body part?
 
@@ -102,7 +127,7 @@ void AAmmunition::Tick(float DeltaTime)
         if (Hit.GetActor())
         {
            //if hit check penetration
-            
+            PenetrationTest(energyJoules, Hit.GetActor(), Hit.GetComponent(), Hit.ImpactPoint);                  
         }
 
         // Place an impact debug point

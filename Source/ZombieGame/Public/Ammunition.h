@@ -23,10 +23,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-	
-
-	void PenetrationTest(float KE_J, AActor* HitActor, UPrimitiveComponent* HitComponent, const FVector& HitLocation);
 	
 public:	
 	// Called every frame
@@ -62,4 +58,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AmmoProperties")
 	float bulletDiameterMM;
+
+	bool PenetrationTest(float KE_J, AActor* HitActor, UPrimitiveComponent* HitComponent, const FVector& HitLocation);
 };

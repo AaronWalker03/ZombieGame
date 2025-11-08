@@ -3,6 +3,9 @@
 
 #include "Ammunition.h"
 #include <Kismet/GameplayStatics.h>
+#include "Components/SceneComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/PrimitiveComponent.h"
 
 // Sets default values
 AAmmunition::AAmmunition()
@@ -26,66 +29,64 @@ void AAmmunition::BeginPlay()
 	previousPosition = GetActorLocation();
 }
 
-void AAmmunition::PenetrationTest(float KE_J, AActor* HitActor, UPrimitiveComponent* HitComponent, const FVector& HitLocation)
+bool AAmmunition::PenetrationTest(float KE_J, AActor* HitActor, UPrimitiveComponent* HitComponent, const FVector& HitLocation)
 {
     float damageScale = 0.02f;
+    bool canGoThrough = false;
 
+    FString ActorName = HitActor->GetName();
 
-    if (HitActor)
-    {
-        FString ActorName = HitActor->GetName();
-        FString ComponentName = HitComponent ? HitComponent->GetName() : TEXT("None");
+    USceneComponent* HitLimb = Cast<USceneComponent>(HitComponent);
+    float limbThickness_m = 0.0f;
 
-        // If this is a skeletal mesh, try to get the bone name
-        FString BoneName = TEXT("N/A");
-        if (USkeletalMeshComponent* SkelComp = Cast<USkeletalMeshComponent>(HitComponent))
-        {
-            // Get the closest bone to the impact location
-            FName ClosestBone = SkelComp->FindClosestBone(HitLocation);
-            if (ClosestBone != NAME_None)
-            {
-                BoneName = ClosestBone.ToString();
-            }
-        }
-
-        UE_LOG(LogTemp, Warning, TEXT("[PenetrationTest] Hit Actor: %s | Component: %s | Bone: %s | Location: %s"),
-            *ActorName,
-            *ComponentName,
-            *BoneName,
-            *HitLocation.ToString());
-    }
-
-    //get reference of body part?
-
-    //initially done with gel block to imitate flesh
-    float gelReferenceDepth_m = 0.30f;  
-    float gelBlockThickness_m = 0.30f;  
+    FVector ComponentExtent = HitLimb->Bounds.BoxExtent; // half-size in cm
+    limbThickness_m = ComponentExtent.Size() * 0.01f;
 
     float refKE_J = 0.5f * bulletMassKG * FMath::Square(velocityms);
-    float gelEnergyPerMeter_Jpm = FMath::Max(refKE_J / gelReferenceDepth_m, 1.0f);
 
-    float penetration_m = KE_J / gelEnergyPerMeter_Jpm;
-    float penetration_cm = penetration_m * 100.0f; // Unreal world units
+    float fleshEnergyPerMeter_Jpm = FMath::Max(refKE_J / 0.3f, 1.0f);
+
+    float penetration_m = KE_J / fleshEnergyPerMeter_Jpm;
+
+   // float penetration_cm = penetration_m * 100.0f; // Unreal world units
 
     float depositedEnergy_J = 0.0f;
 
-    if (penetration_m >= gelBlockThickness_m)
+    if (penetration_m >= limbThickness_m)
     {
         // Bullet exits the block: energy lost inside the block = J per meter * thickness (meters)
-        depositedEnergy_J = gelEnergyPerMeter_Jpm * gelBlockThickness_m;
+        depositedEnergy_J = fleshEnergyPerMeter_Jpm * limbThickness_m;      
+        //reduce bullet velocity based on the depth and thickness of limb?
+
+
+         // Reduce bullet velocity based on energy lost
+        float remainingKE_J = KE_J - depositedEnergy_J;
+        if (remainingKE_J > 0)
+        {
+            velocityms = FMath::Sqrt((2.0f * remainingKE_J) / bulletMassKG);
+        }
+        else
+        {
+            velocityms = 0.0f;
+        }
+
+        canGoThrough = true;
     }
     else
     {
         // Bullet stops inside the block: all kinetic energy is deposited
         depositedEnergy_J = KE_J;
-    }
 
+        canGoThrough = false;
+    }
 
     fleshDamage = depositedEnergy_J * damageScale;
 
+    UE_LOG(LogTemp, Warning, TEXT("[PenetrationTest] Hit Actor: %s | Limb Thickness: %.2f m | Damage: %.2f | CanGoThrough: %s"),
+        *ActorName, limbThickness_m, fleshDamage, canGoThrough ? TEXT("Yes") : TEXT("No"));
 
+    return canGoThrough;
 
-    //then do damage here?
 }
 
 // Called every frame
@@ -123,24 +124,31 @@ void AAmmunition::Tick(float DeltaTime)
 
     if (bHit)
     {
-        // Immediate, simple hit handling — apply point damage if actor exists
         if (Hit.GetActor())
         {
-           //if hit check penetration
-            PenetrationTest(energyJoules, Hit.GetActor(), Hit.GetComponent(), Hit.ImpactPoint);                  
-        }
+            // Debug: speed before
+            float speedBefore = velocityms;
 
-        // Place an impact debug point
-        DrawDebugPoint(GetWorld(), Hit.ImpactPoint, 8.0f, FColor::Red, false, 2.0f);
+            bool canGoThrough = PenetrationTest(energyJoules, Hit.GetActor(), Hit.GetComponent(), Hit.ImpactPoint);
 
-        // Destroy bullet immediately on first hit
-        //additionally check penetration, if can go through keep going dont destroy
-        Destroy();
-        return;
+            // Debug: speed after
+            float speedAfter = velocityms;
+            UE_LOG(LogTemp, Warning, TEXT("[BulletHit] Speed before: %.2f m/s | Speed after: %.2f m/s"), speedBefore, speedAfter);
+
+            if (canGoThrough && velocityms > 0)
+            {
+            
+            }
+            else
+            {
+                // Bullet stops inside the limb
+                Destroy();
+                return;
+            }
+        }     
     }
 
-    // No hit: apply gravity and move to end position
-    velocity.Z += gravity * DeltaTime; // Gravity should be negative, e.g. -980.f (cm/s^2)
+    velocity.Z += gravity * DeltaTime; 
     SetActorLocation(End);
     previousPosition = End;
 

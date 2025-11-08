@@ -35,6 +35,11 @@ class ZOMBIEGAME_API AZombieAi : public ACharacter
 public:
 	AZombieAi();
 
+	void TakeDamage();
+
+	UFUNCTION()
+	void DismemberLimb(FName BoneName);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -117,11 +122,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	APawn* TargetPlayer;
-
-	void TakeDamage();
-
-	UFUNCTION()
-	void DismemberLimb(FName BoneName);
 
 	//DO NOT FUCKING TOUCH THESE
 	UFUNCTION()

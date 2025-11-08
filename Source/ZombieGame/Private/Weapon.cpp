@@ -84,6 +84,7 @@ void AWeapon::Shoot()
         Bullet->velocity = LaunchDirection * bulletVelocity;
         Bullet->energyJoules = energyJoules;
         Bullet->bulletMassKG = bulletMassKG;
+        Bullet->velocityms = velocityms;
     }
 
 

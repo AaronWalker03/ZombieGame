@@ -33,6 +33,10 @@ void AWeapon::BeginPlay()
 
 void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float bulletDiameterMM)
 {
+    //later on implement different types of bullets, will affect pen
+    //somehow implement how hollowpoints will work
+
+
     bulletVelocity = 0.0;
     float grainInKG = 0.00006479891;
     float energyDensity = 4.05e6;

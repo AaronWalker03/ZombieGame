@@ -31,6 +31,12 @@ void AAmmunition::BeginPlay()
 
 bool AAmmunition::PenetrationTest(float KE_J, AActor* HitActor, UPrimitiveComponent* HitComponent, const FVector& HitLocation)
 {
+    //potentially optimise this by running it on the gpu
+
+    // maybe add bone damage, if only hits side of the limb shouldnt be able to dismember
+    //bone breaking will allow for more realistic dismemberemnt
+
+
     float damageScale = 0.02f;
     bool canGoThrough = false;
 
@@ -53,22 +59,12 @@ bool AAmmunition::PenetrationTest(float KE_J, AActor* HitActor, UPrimitiveCompon
     float depositedEnergy_J = 0.0f;
 
     if (penetration_m >= limbThickness_m)
-    {
-        // Bullet exits the block: energy lost inside the block = J per meter * thickness (meters)
-        depositedEnergy_J = fleshEnergyPerMeter_Jpm * limbThickness_m;      
-        //reduce bullet velocity based on the depth and thickness of limb?
+    {     
+        depositedEnergy_J = fleshEnergyPerMeter_Jpm * limbThickness_m;
 
-
-         // Reduce bullet velocity based on energy lost
         float remainingKE_J = KE_J - depositedEnergy_J;
-        if (remainingKE_J > 0)
-        {
-            velocityms = FMath::Sqrt((2.0f * remainingKE_J) / bulletMassKG);
-        }
-        else
-        {
-            velocityms = 0.0f;
-        }
+
+        velocityms = FMath::Sqrt((2.0f * remainingKE_J) / bulletMassKG);
 
         canGoThrough = true;
     }
@@ -135,9 +131,9 @@ void AAmmunition::Tick(float DeltaTime)
             float speedAfter = velocityms;
             UE_LOG(LogTemp, Warning, TEXT("[BulletHit] Speed before: %.2f m/s | Speed after: %.2f m/s"), speedBefore, speedAfter);
 
-            if (canGoThrough && velocityms > 0)
+            if (canGoThrough)
             {
-            
+                //slight bug that isnt allowing collateral penetration
             }
             else
             {

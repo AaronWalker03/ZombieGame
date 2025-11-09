@@ -106,41 +106,38 @@ void AAmmunition::Tick(float DeltaTime)
     FVector End = Start + velocity * DeltaTime;
 
     // Trace params - ignore self and the weapon owner
-    FHitResult Hit;
+    TArray<FHitResult> Hits;
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
     if (GetOwner()) Params.AddIgnoredActor(GetOwner());
     Params.bReturnPhysicalMaterial = false;
 
     // Perform line trace between previous and new position
-    bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
+    bool bHit = GetWorld()->LineTraceMultiByChannel(Hits, Start, End, ECC_Visibility, Params);
 
     // Debug: draw path
     DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Red : FColor::Green, false, 1.0f, 0, 0.5f);
 
     if (bHit)
     {
-        if (Hit.GetActor())
+        for (const FHitResult& Hit : Hits)
         {
             // Debug: speed before
-            float speedBefore = velocityms;
+            //float speedBefore = velocityms;
 
             bool canGoThrough = PenetrationTest(energyJoules, Hit.GetActor(), Hit.GetComponent(), Hit.ImpactPoint);
 
             // Debug: speed after
-            float speedAfter = velocityms;
-            UE_LOG(LogTemp, Warning, TEXT("[BulletHit] Speed before: %.2f m/s | Speed after: %.2f m/s"), speedBefore, speedAfter);
+            //float speedAfter = velocityms;
+           // UE_LOG(LogTemp, Warning, TEXT("[BulletHit] Speed before: %.2f m/s | Speed after: %.2f m/s"), speedBefore, speedAfter);
 
-            if (canGoThrough)
+           
+
+            if (!canGoThrough)
             {
                 //slight bug that isnt allowing collateral penetration
-            }
-            else
-            {
-                // Bullet stops inside the limb
                 Destroy();
-                return;
-            }
+            }         
         }     
     }
 

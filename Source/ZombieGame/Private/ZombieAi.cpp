@@ -144,6 +144,9 @@ void AZombieAi::BeginPlay()
 //maybe make each limb have an amount of health?
 //with amount of blood in it?
 
+// - I like idea. Have been thinking about a bleed out mechanic where the zombie will bleed out and die after a realistic amount of time
+// - so if u take out a leg and hit the femoral artery it will spurt blood out faster and the zombie will bleed out quicker than an arm being removed
+
 void AZombieAi::TakeDamage()
 {
     

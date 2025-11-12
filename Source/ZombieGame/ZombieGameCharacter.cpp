@@ -17,6 +17,11 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 //////////////////////////////////////////////////////////////////////////
 // AZombieGameCharacter
 
+
+//could add dismemberent for players? if you get bitten in multiplayer to stay alive longer chop a limb off? 
+//would potentially require new animations tho
+
+
 AZombieGameCharacter::AZombieGameCharacter()
 {
 	// Set size for collision capsule

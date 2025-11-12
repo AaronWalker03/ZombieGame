@@ -109,6 +109,27 @@ void AZombieAi::SetBodyparts()
 
     RFoot->SetStaticMesh(CubeAsset.Object);
     RFoot->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+
+    LimbHealthMap.Add("Head", FLimbData(35.f));
+
+    // Arms: low importance
+    LimbHealthMap.Add("LUpArm", FLimbData(15.f));
+    LimbHealthMap.Add("LForearm", FLimbData(10.f));
+    LimbHealthMap.Add("LHand", FLimbData(5.f));
+    LimbHealthMap.Add("RUpArm", FLimbData(15.f));
+    LimbHealthMap.Add("RForearm", FLimbData(10.f));
+    LimbHealthMap.Add("RHand", FLimbData(5.f));
+
+    // Legs: mid-range, can bleed out but not instant kill
+    LimbHealthMap.Add("LThigh", FLimbData(25.f));
+    LimbHealthMap.Add("LCalf", FLimbData(20.f));
+    LimbHealthMap.Add("LFoot", FLimbData(10.f));
+    LimbHealthMap.Add("RThigh", FLimbData(25.f));
+    LimbHealthMap.Add("RCalf", FLimbData(20.f));
+    LimbHealthMap.Add("RFoot", FLimbData(10.f));
+
+    // Torso or spine can be main kill zone if you want
+    LimbHealthMap.Add("Torso", FLimbData(60.f));
 }
 
 void AZombieAi::BeginPlay()
@@ -147,32 +168,71 @@ void AZombieAi::BeginPlay()
 // - I like idea. Have been thinking about a bleed out mechanic where the zombie will bleed out and die after a realistic amount of time
 // - so if u take out a leg and hit the femoral artery it will spurt blood out faster and the zombie will bleed out quicker than an arm being removed
 
-void AZombieAi::TakeDamage()
+void AZombieAi::ApplyLimbDamage(UPrimitiveComponent* HitComp, float Damage)
 {
-    
+    FName LimbName = HitComp->GetFName();
+    if (LimbHealthMap.Contains(LimbName))
+    {
+        FLimbData& Limb = LimbHealthMap[LimbName];
+        Limb.CurrentHealth -= Damage;
 
-      
-    
+        UE_LOG(LogTemp, Warning, TEXT("%s took %.2f damage (%.2f / %.2f)"),
+            *LimbName.ToString(), Damage, Limb.CurrentHealth, Limb.MaxHealth);
+
+        if (Limb.CurrentHealth <= Damage)
+        {
+            DismemberLimb(HitComp);
+        }
+
+
+    }
 }
 
-void AZombieAi::DismemberLimb(FName BoneName)
+void AZombieAi::DismemberLimb(UPrimitiveComponent* HitComp)
 {
-    /* CubeMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-      CubeMesh->SetSimulatePhysics(true);
-      CubeMesh->AddImpulse(FVector(0.f, -100.f, 300.f), NAME_None, true);*/ // small pop-up impulse
+    FName LimbName = HitComp->GetFName();
 
-      // Spawn a blood particle effect at the head socket location
+    // Try to cast directly
+    UStaticMeshComponent* LimbComp = Cast<UStaticMeshComponent>(HitComp);
 
-      /*FVector SocketLocation = GetMesh()->GetSocketLocation(FName("head"));
-      UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodFX, SocketLocation, FRotator::ZeroRotator, FVector(1.f), true);*/
+    if (!LimbComp)
+    {
+        // Fallback: search through all attached static mesh components
+        TArray<UActorComponent*> Components;
+        GetComponents(UStaticMeshComponent::StaticClass(), Components);
 
+        for (UActorComponent* C : Components)
+        {
+            if (C && C->GetFName() == LimbName)
+            {
+                LimbComp = Cast<UStaticMeshComponent>(C);
+                break;
+            }
+        }
+    }
 
-      // Optional: remove cube after a few seconds
-     // CubeMesh->SetLifeSpan(5.0f);
+    if (LimbComp)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Detaching limb: %s"), *LimbName.ToString());
 
-   
+        // Detach and enable physics
+        LimbComp->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+        LimbComp->SetSimulatePhysics(true);
+        LimbComp->AddImpulse(FVector(0.f, 0.f, 200.f), NAME_None, true);
+
+       /* if (BloodFX)
+        {
+            FVector BloodLoc = LimbComp->GetComponentLocation();
+            UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodFX, BloodLoc, FRotator::ZeroRotator, FVector(1.f), true);
+        }*/
+
+       // LimbComp->SetLifeSpan(10.0f);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("DismemberLimb: Could not find component named %s"), *LimbName.ToString());
+    } 
 }
-
 
 // Called every frame
 void AZombieAi::Tick(float DeltaTime)

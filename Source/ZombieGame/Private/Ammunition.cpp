@@ -5,7 +5,8 @@
 #include <Kismet/GameplayStatics.h>
 #include "Components/SceneComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Components/PrimitiveComponent.h"
+#include "Components/PrimitiveComponent.h" 
+#include "ZombieAi.h"
 
 // Sets default values
 AAmmunition::AAmmunition()
@@ -76,10 +77,12 @@ bool AAmmunition::PenetrationTest(float KE_J, AActor* HitActor, UPrimitiveCompon
         canGoThrough = false;
     }
 
+    fleshDamage = 0.0f;
+
     fleshDamage = depositedEnergy_J * damageScale;
 
-    UE_LOG(LogTemp, Warning, TEXT("[PenetrationTest] Hit Actor: %s | Limb Thickness: %.2f m | Damage: %.2f | CanGoThrough: %s"),
-        *ActorName, limbThickness_m, fleshDamage, canGoThrough ? TEXT("Yes") : TEXT("No"));
+    /*UE_LOG(LogTemp, Warning, TEXT("[PenetrationTest] Hit Actor: %s | Limb Thickness: %.2f m | Damage: %.2f | CanGoThrough: %s"),
+        *ActorName, limbThickness_m, fleshDamage, canGoThrough ? TEXT("Yes") : TEXT("No"));*/
 
     return canGoThrough;
 
@@ -131,7 +134,13 @@ void AAmmunition::Tick(float DeltaTime)
             //float speedAfter = velocityms;
            // UE_LOG(LogTemp, Warning, TEXT("[BulletHit] Speed before: %.2f m/s | Speed after: %.2f m/s"), speedBefore, speedAfter);
 
-           
+            AZombieAi* zombie = Cast<AZombieAi>(Hit.GetActor());
+
+            if (zombie)
+            {
+                //network this part so that bleed and other damage shite is client side only?
+                zombie->ApplyLimbDamage(Hit.GetComponent(), fleshDamage);
+            }
 
             if (!canGoThrough)
             {

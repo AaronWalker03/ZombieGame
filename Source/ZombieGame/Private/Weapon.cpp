@@ -65,7 +65,7 @@ void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float b
 
     energyJoules = KE_J;
 
-    UE_LOG(LogTemp, Warning, TEXT("Ballistics: E=%.1fJ, vel=%.2f m/s (%.0f cm/s)"), KE_J, velocityms, bulletVelocity);
+    //UE_LOG(LogTemp, Warning, TEXT("Ballistics: E=%.1fJ, vel=%.2f m/s (%.0f cm/s)"), KE_J, velocityms, bulletVelocity);
 }
 
 void AWeapon::Shoot()

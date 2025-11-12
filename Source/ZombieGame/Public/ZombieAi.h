@@ -6,20 +6,7 @@
 #include "GameFramework/Character.h"
 #include "ZombieAi.generated.h"
 
-UENUM(BlueprintType)
-enum class EZombieState : uint8
-{
-	ZS_Idle      UMETA(DisplayName = "Idle"),
-	ZS_Attack    UMETA(DisplayName = "Attack"),
-	ZS_Wandering UMETA(DisplayName = "Wandering")
-};
-
-UCLASS()
-class ZOMBIEGAME_API AZombieAi : public ACharacter
-{
-	GENERATED_BODY()
-
-	//implement ai reacting to gunshot sounds, decibels could be implemented for hearing range
+//implement ai reacting to gunshot sounds, decibels could be implemented for hearing range
 	//this is where different amunition comes into play for supersonic or subsonic ammunition
 
 	//later on random/procedural effects to the zombies with different effects and skins
@@ -32,13 +19,53 @@ class ZOMBIEGAME_API AZombieAi : public ACharacter
 
 	//implement damage and body part damage
 
+UENUM(BlueprintType)
+enum class EZombieState : uint8
+{
+	ZS_Idle      UMETA(DisplayName = "Idle"),
+	ZS_Attack    UMETA(DisplayName = "Attack"),
+	ZS_Wandering UMETA(DisplayName = "Wandering")
+};
+
+USTRUCT(BlueprintType)
+struct FLimbData
+{
+	GENERATED_BODY()
+
+	//add position and socket later on jsut so its easier and cleaner
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxHealth;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CurrentHealth;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bBleeding;
+
+	FLimbData()
+		: MaxHealth(100.f), CurrentHealth(100.f), bBleeding(false)
+	{
+	}
+
+	FLimbData(float InHealth)
+		: MaxHealth(InHealth), CurrentHealth(InHealth), bBleeding(false)
+	{
+	}
+};
+
+UCLASS()
+class ZOMBIEGAME_API AZombieAi : public ACharacter
+{
+	GENERATED_BODY()
+
 public:
 	AZombieAi();
 
-	void TakeDamage();
+	void ApplyLimbDamage(UPrimitiveComponent* HitComp, float Damage);
 
 	UFUNCTION()
-	void DismemberLimb(FName BoneName);
+	void DismemberLimb(UPrimitiveComponent* HitComp);
 
 protected:
 	virtual void BeginPlay() override;
@@ -92,6 +119,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
 	float health;
+
+	UPROPERTY(EditAnywhere, Category = "Zombie Stats")
+	TMap<FName, FLimbData> LimbHealthMap;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
 	float bloodAmount; //in litres?

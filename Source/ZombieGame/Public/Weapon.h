@@ -15,6 +15,11 @@ public:
 	// Sets default values for this actor's properties
 	AWeapon();
 
+	//get weapon attachments and ajust for recoil
+	//also depending on the bullet used this will affect the recoil
+	//then assign somehwat random values for recoil 
+	//maybe randomise bullet velocities which can affect recoil
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

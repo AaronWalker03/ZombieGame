@@ -184,6 +184,7 @@ void AZombieAi::ApplyLimbDamage(UPrimitiveComponent* HitComp, float Damage)
             DismemberLimb(HitComp);
         }
 
+        //add logic where if you lose upper arm you lose the rest
 
     }
 }
@@ -219,6 +220,9 @@ void AZombieAi::DismemberLimb(UPrimitiveComponent* HitComp)
         LimbComp->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
         LimbComp->SetSimulatePhysics(true);
         LimbComp->AddImpulse(FVector(0.f, 0.f, 200.f), NAME_None, true);
+
+
+        //could be cool for the blood fx at first it spurts out loads then over time goes down as less blood in body
 
        /* if (BloodFX)
         {

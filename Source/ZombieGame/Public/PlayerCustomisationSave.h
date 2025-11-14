@@ -29,4 +29,7 @@ public:
     UPROPERTY(BlueprintReadWrite)
     TSoftObjectPtr<USkeletalMesh> faceWearMesh;
 
+    UPROPERTY(BlueprintReadWrite)
+    TSoftClassPtr<AWeapon> weaponClass;
+
 };

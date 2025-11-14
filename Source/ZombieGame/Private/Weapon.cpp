@@ -6,6 +6,9 @@
 #include "Engine/World.h"
 
 
+//need to fuck about with accuracy cose barrel length plays with it
+//affects initial velocity and how far it spreads
+
 // Sets default values
 AWeapon::AWeapon()
 {

@@ -15,6 +15,9 @@ public:
 	// Sets default values for this actor's properties
 	AWeapon();
 
+	UPROPERTY(VisibleAnywhere, Category = "Mesh")
+	USkeletalMeshComponent* mesh;
+
 	//get weapon attachments and ajust for recoil
 	//also depending on the bullet used this will affect the recoil
 	//then assign somehwat random values for recoil 
@@ -26,8 +29,7 @@ protected:
 
 	//ideally turn the current mesh into fully in depth to show components and what part can be modded
 
-	UPROPERTY(VisibleAnywhere, Category = "Mesh")
-	USkeletalMeshComponent* mesh;
+	
 
 	// These get set by child classes
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")

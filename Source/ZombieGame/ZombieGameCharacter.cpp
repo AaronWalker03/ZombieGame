@@ -105,6 +105,7 @@ void AZombieGameCharacter::SaveCustomisation()
 	SaveObj->tshirtWearMesh = tshirtWear->GetSkeletalMeshAsset();
 	SaveObj->jacketWearMesh = jacketWear->GetSkeletalMeshAsset();
 	SaveObj->faceWearMesh = faceWear->GetSkeletalMeshAsset();
+	SaveObj->weaponClass = EquippedWeapon->GetClass();
 
 	UGameplayStatics::SaveGameToSlot(SaveObj, TEXT("PlayerCustomisation"), 0);
 }
@@ -123,6 +124,7 @@ void AZombieGameCharacter::LoadCustomisation()
 		tshirtWear->SetSkeletalMesh(SaveObj->tshirtWearMesh.LoadSynchronous());
 		jacketWear->SetSkeletalMesh(SaveObj->jacketWearMesh.LoadSynchronous());
 		faceWear->SetSkeletalMesh(SaveObj->faceWearMesh.LoadSynchronous());
+		DefaultWeaponClass = SaveObj->weaponClass.Get();
 	}
 }
 

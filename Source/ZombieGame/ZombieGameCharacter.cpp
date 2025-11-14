@@ -11,6 +11,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 #include "ZombieGameProjectile.h"
+#include "PlayerCustomisationSave.h"
+#include <Kismet/GameplayStatics.h>
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -64,16 +66,64 @@ AZombieGameCharacter::AZombieGameCharacter()
 	//Initialize fire rate
 	FireRate = 0.25f;
 	bIsFiringWeapon = false;
+
+	footWear = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("footWear"));
+	footWear->SetupAttachment(GetMesh());
+
+	legWear = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("legWear"));
+	legWear->SetupAttachment(GetMesh());
+
+	tshirtWear = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("tshirtWear"));
+	tshirtWear->SetupAttachment(GetMesh());
+
+	jacketWear = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("jacketWear"));
+	jacketWear->SetupAttachment(GetMesh());
+
+	faceWear = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("faceWear"));
+	faceWear->SetupAttachment(GetMesh());
+
+
 }
 
 void AZombieGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	LoadCustomisation();
+
 	SpawnWeapon();
 
-	//this fucking works btw just need to bind it to keybind
-	//EquippedWeapon->Shoot();
+}
+
+void AZombieGameCharacter::SaveCustomisation()
+{
+	UPlayerCustomisationSave* SaveObj =
+		Cast<UPlayerCustomisationSave>(UGameplayStatics::CreateSaveGameObject(UPlayerCustomisationSave::StaticClass()));
+
+	SaveObj->footWearMesh = footWear->GetSkeletalMeshAsset();
+	SaveObj->legWearMesh = legWear->GetSkeletalMeshAsset();
+	SaveObj->tshirtWearMesh = tshirtWear->GetSkeletalMeshAsset();
+	SaveObj->jacketWearMesh = jacketWear->GetSkeletalMeshAsset();
+	SaveObj->faceWearMesh = faceWear->GetSkeletalMeshAsset();
+
+	UGameplayStatics::SaveGameToSlot(SaveObj, TEXT("PlayerCustomisation"), 0);
+}
+
+void AZombieGameCharacter::LoadCustomisation()
+{
+	if (UGameplayStatics::DoesSaveGameExist(TEXT("PlayerCustomisation"), 0))
+	{
+		UPlayerCustomisationSave* SaveObj =
+			Cast<UPlayerCustomisationSave>(UGameplayStatics::LoadGameFromSlot(TEXT("PlayerCustomisation"), 0));
+
+		if (!SaveObj) return;
+
+		footWear->SetSkeletalMesh(SaveObj->footWearMesh.LoadSynchronous());
+		legWear->SetSkeletalMesh(SaveObj->legWearMesh.LoadSynchronous());
+		tshirtWear->SetSkeletalMesh(SaveObj->tshirtWearMesh.LoadSynchronous());
+		jacketWear->SetSkeletalMesh(SaveObj->jacketWearMesh.LoadSynchronous());
+		faceWear->SetSkeletalMesh(SaveObj->faceWearMesh.LoadSynchronous());
+	}
 }
 
 void AZombieGameCharacter::SpawnWeapon()

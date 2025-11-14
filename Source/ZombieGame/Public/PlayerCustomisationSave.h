@@ -13,19 +13,20 @@ class ZOMBIEGAME_API UPlayerCustomisationSave : public USaveGame
 	GENERATED_BODY()
 	
 public:
+  
     UPROPERTY(BlueprintReadWrite)
-    FString HeadMeshName;
+    TSoftObjectPtr<USkeletalMesh> footWearMesh;
 
     UPROPERTY(BlueprintReadWrite)
-    FString TorsoMeshName;
+    TSoftObjectPtr<USkeletalMesh> legWearMesh;
 
     UPROPERTY(BlueprintReadWrite)
-    FString LegsMeshName;
+    TSoftObjectPtr<USkeletalMesh> tshirtWearMesh;
 
     UPROPERTY(BlueprintReadWrite)
-    FString FeetMeshName;
+    TSoftObjectPtr<USkeletalMesh> jacketWearMesh;
 
     UPROPERTY(BlueprintReadWrite)
-    FString WeaponName;
+    TSoftObjectPtr<USkeletalMesh> faceWearMesh;
 
 };

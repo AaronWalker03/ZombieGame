@@ -71,7 +71,28 @@ public:
 
 	void BeginPlay();
 
+	UFUNCTION(BlueprintCallable)
+	void SaveCustomisation();
+
+	void LoadCustomisation();
+
 	//call save file and get meshes saved
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Clothes Meshes")
+	USkeletalMeshComponent* footWear;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Clothes Meshes")
+	USkeletalMeshComponent* legWear;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Clothes Meshes")
+	USkeletalMeshComponent* tshirtWear;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Clothes Meshes")
+	USkeletalMeshComponent* jacketWear;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Clothes Meshes")
+	USkeletalMeshComponent* faceWear;
+
 
 	void SpawnWeapon();
 

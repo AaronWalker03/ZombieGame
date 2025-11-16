@@ -32,4 +32,10 @@ public:
     UPROPERTY(BlueprintReadWrite)
     TSoftClassPtr<AWeapon> weaponClass;
 
+    UPROPERTY(BlueprintReadWrite)
+    int playerLevel = 1;
+
+    UPROPERTY(BlueprintReadWrite)
+    int currentXP = 0;
+
 };

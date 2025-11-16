@@ -80,9 +80,7 @@ AZombieGameCharacter::AZombieGameCharacter()
 	jacketWear->SetupAttachment(GetMesh());
 
 	faceWear = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("faceWear"));
-	faceWear->SetupAttachment(GetMesh());
-
-
+	faceWear->SetupAttachment(GetMesh());	
 }
 
 void AZombieGameCharacter::BeginPlay()
@@ -125,7 +123,13 @@ void AZombieGameCharacter::LoadCustomisation()
 		jacketWear->SetSkeletalMesh(SaveObj->jacketWearMesh.LoadSynchronous());
 		faceWear->SetSkeletalMesh(SaveObj->faceWearMesh.LoadSynchronous());
 		DefaultWeaponClass = SaveObj->weaponClass.Get();
+		currentXP = SaveObj->currentXP;
 	}
+}
+
+void AZombieGameCharacter::AddXP(int amount)
+{
+	currentXP = currentXP + amount;
 }
 
 void AZombieGameCharacter::SpawnWeapon()

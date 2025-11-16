@@ -65,6 +65,8 @@ protected:
 	/** The player's current health. When reduced to 0, they are considered dead.*/
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
 	float CurrentHealth;
+
+	int currentXP;
 	
 public:
 	AZombieGameCharacter();
@@ -75,6 +77,8 @@ public:
 	void SaveCustomisation();
 
 	void LoadCustomisation();
+
+	void AddXP(int amount);
 
 	//call save file and get meshes saved
 

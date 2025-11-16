@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/DamageType.h"
 #include "Engine/DamageEvents.h"
+#include "ZombieGameCharacter.h"
 
 // Sets default values
 AZombieAi::AZombieAi()
@@ -182,6 +183,10 @@ void AZombieAi::ApplyLimbDamage(UPrimitiveComponent* HitComp, float Damage)
         if (Limb.CurrentHealth <= Damage)
         {
             DismemberLimb(HitComp);
+
+            AZombieGameCharacter* PlayerChar = Cast<AZombieGameCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+            PlayerChar->AddXP(5);
+
         }
 
         //add logic where if you lose upper arm you lose the rest

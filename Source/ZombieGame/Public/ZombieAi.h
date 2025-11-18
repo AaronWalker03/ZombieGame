@@ -17,7 +17,8 @@
 
 
 
-	//implement damage and body part damage
+	//put together health system with bleed and gore
+//use the players AddXP function whenever you dismembre, kill and maybe bleed time <- its all ready to go just need to just give it an amount
 
 UENUM(BlueprintType)
 enum class EZombieState : uint8

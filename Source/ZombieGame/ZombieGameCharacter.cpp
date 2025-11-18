@@ -89,6 +89,9 @@ void AZombieGameCharacter::BeginPlay()
 
 	LoadCustomisation();
 
+	FString XPMessage = FString::Printf(TEXT("You now have %d XP"), currentXP);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, XPMessage);
+
 	SpawnWeapon();
 
 }
@@ -130,10 +133,20 @@ void AZombieGameCharacter::LoadCustomisation()
 void AZombieGameCharacter::AddXP(int amount)
 {
 	currentXP = currentXP + amount;
+
+	UPlayerCustomisationSave* SaveObj =
+		Cast<UPlayerCustomisationSave>(UGameplayStatics::CreateSaveGameObject(UPlayerCustomisationSave::StaticClass()));
+
+	SaveObj->currentXP = currentXP;
+
+	UGameplayStatics::SaveGameToSlot(SaveObj, TEXT("PlayerCustomisation"), 0);
 }
 
 void AZombieGameCharacter::SpawnWeapon()
 {
+	// maybe make it so that the arm attaches to the front grip too?? not sure if sockets would allow that tho
+
+
 	if (!EquippedWeapon && DefaultWeaponClass)
 	{
 		FActorSpawnParameters SpawnParams;

@@ -16,7 +16,9 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-//NEED TO CREATE SOME SORT OF SAVE FILE TO REMEMBER PLAYER DATA FOR WEAPONS AND EQUIPMENT
+//need to make levelling system, doesnt actually have to unlock anything yet but just have it there saves time later
+//^^^already have XP and player level implemented
+//can easily make this exponential
 
 UCLASS(abstract)
 class AZombieGameCharacter : public ACharacter

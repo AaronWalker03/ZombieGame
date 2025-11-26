@@ -22,6 +22,10 @@ public:
 	//also depending on the bullet used this will affect the recoil
 	//then assign somehwat random values for recoil 
 	//maybe randomise bullet velocities which can affect recoil
+	
+	//add chambered value
+	//basically if theres a bullet in the chamber when reloading you dont need to rerack it
+	//makes the reload faster type shi
 
 protected:
 	// Called when the game starts or when spawned

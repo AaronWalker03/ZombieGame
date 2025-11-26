@@ -4,20 +4,23 @@
 #include "ZombieSpawner.h"
 #include "ZombieAi.h"
 
-// Sets default values
+
+
+
+//implement zombies dying so rounds actually change
+
 AZombieSpawner::AZombieSpawner()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
-// Called when the game starts or when spawned
 void AZombieSpawner::BeginPlay()
 {
 	Super::BeginPlay();
 	
-    
+    roundNum = 1;
+
+    zombiesToSpawn = 15;
 }
 
 // Called every frame
@@ -25,22 +28,51 @@ void AZombieSpawner::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-    SpawnZombie();
+    RoundManager();
+}
+
+void AZombieSpawner::RoundManager()
+{
+    if (zombiesToSpawn > 0)
+    {
+        SpawnZombie();
+        zombiesToSpawn--;
+        aliveZombies++;
+        return;
+    }
+
+    if (aliveZombies == 0)
+    {
+        StartNewRound();
+    }
+}
+
+void AZombieSpawner::StartNewRound()
+{
+    roundNum++;
+
+    zombiesToSpawn = 5 + (roundNum - 1) * 2;
+
+    UE_LOG(LogTemp, Warning, TEXT("Starting round %d with %d zombies"),
+        roundNum, zombiesToSpawn);
 }
 
 void AZombieSpawner::SpawnZombie()
 {
-    FVector SpawnLocation = FVector(0, 0, 0);
-    FRotator SpawnRotation = FRotator(0, 0, 0);
+    AActor* SpawnPoint = SpawnPoints[FMath::RandRange(0, SpawnPoints.Num() - 1)];
+
+    FVector Location = SpawnPoint->GetActorLocation();
+
+   
+    Location.Z += 100.f;  
+
+    FRotator Rotation = SpawnPoint->GetActorRotation();
 
     FActorSpawnParameters SpawnParams;
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
     // Spawn zombie
-    AZombieAi* Zombie = GetWorld()->SpawnActor<AZombieAi>(
-        ZombieClass,
-        SpawnLocation,
-        SpawnRotation,
-        SpawnParams
-    );
+    GetWorld()->SpawnActor<AZombieAi>(ZombieClass, Location, Rotation, SpawnParams);
+
+    spawnIndex++;
 }

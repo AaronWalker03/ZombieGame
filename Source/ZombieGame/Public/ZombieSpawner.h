@@ -22,10 +22,21 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	int aliveZombies = 0;
 
+	int zombiesToSpawn = 0;
+
+	int roundNum = 0;
+
 	void SpawnZombie();
+	void StartNewRound();
+	void RoundManager();
 
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	TSubclassOf<AZombieAi> ZombieClass;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	TArray<AActor*> SpawnPoints;
+
+	int spawnIndex = 0;
 
 public:	
 	// Called every frame

@@ -125,14 +125,15 @@ void AAmmunition::Tick(float DeltaTime)
     {
         for (const FHitResult& Hit : Hits)
         {
-            // Debug: speed before
             //float speedBefore = velocityms;
 
             bool canGoThrough = PenetrationTest(energyJoules, Hit.GetActor(), Hit.GetComponent(), Hit.ImpactPoint);
-
-            // Debug: speed after
+       
             //float speedAfter = velocityms;
            // UE_LOG(LogTemp, Warning, TEXT("[BulletHit] Speed before: %.2f m/s | Speed after: %.2f m/s"), speedBefore, speedAfter);
+
+
+            //potentially link the player hit.GetActor() for friendly fire
 
             AZombieAi* zombie = Cast<AZombieAi>(Hit.GetActor());
 

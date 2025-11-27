@@ -184,8 +184,9 @@ void AZombieAi::ApplyLimbDamage(UPrimitiveComponent* HitComp, float Damage)
         {
             DismemberLimb(HitComp);
 
-            AZombieGameCharacter* PlayerChar = Cast<AZombieGameCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-            PlayerChar->AddXP(5);
+            //uncomment this once we've decided the XP shite
+           /* AZombieGameCharacter* PlayerChar = Cast<AZombieGameCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+            PlayerChar->AddXP(5);*/
 
         }
 

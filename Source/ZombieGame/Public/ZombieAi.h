@@ -20,6 +20,9 @@
 	//put together health system with bleed and gore
 //use the players AddXP function whenever you dismembre, kill and maybe bleed time <- its all ready to go just need to just give it an amount
 
+//maybe add more states??
+//if the zombies get enraged or something or some have the ability to be faster than others, or even climb 
+
 UENUM(BlueprintType)
 enum class EZombieState : uint8
 {

@@ -60,10 +60,9 @@ AZombieGameCharacter::AZombieGameCharacter()
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
 
-	//GET RID OF THIS AND REPLACE WITH MY SUPERIOR WEAPON SCRIPT WHICH USES THE BOOLETS
 	ProjectileClass = AZombieGameProjectile::StaticClass();
 
-	//Initialize fire rate
+	//add a value in weapon class for how fast it can shoot (each gun gona be different)
 	FireRate = 0.25f;
 	bIsFiringWeapon = false;
 
@@ -95,6 +94,10 @@ void AZombieGameCharacter::BeginPlay()
 	SpawnWeapon();
 
 }
+
+
+//savew file needs to be different because when adding xp manually saving to file each time but doesnt do the rest for some reason
+//otherwise make it when you die or extract it saves everything
 
 void AZombieGameCharacter::SaveCustomisation()
 {

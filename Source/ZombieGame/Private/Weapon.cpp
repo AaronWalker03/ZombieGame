@@ -69,6 +69,21 @@ void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float b
     energyJoules = KE_J;
 
     //UE_LOG(LogTemp, Warning, TEXT("Ballistics: E=%.1fJ, vel=%.2f m/s (%.0f cm/s)"), KE_J, velocityms, bulletVelocity);
+
+    float gunMassKG = 3.0f; // typical rifle mass, tweak in editor later
+    float bulletMomentum = bulletMassKG * velocityms; // kg*m/s
+
+    // Newton-seconds impulse applied to gun
+    recoilImpulse = bulletMomentum;
+
+    // Convert to gameplay recoil (degrees)
+    recoilKick = recoilImpulse * 40.0f;      // vertical rise
+    recoilShake = recoilImpulse * 15.0f;     // horizontal sway
+
+    // Clamp so .45 ACP doesn't flip guns backward
+    recoilKick = FMath::Clamp(recoilKick, 0.1f, 5.0f);
+    recoilShake = FMath::Clamp(recoilShake, 0.1f, 3.0f);
+
 }
 
 void AWeapon::Shoot()
@@ -93,6 +108,9 @@ void AWeapon::Shoot()
         Bullet->bulletMassKG = bulletMassKG;
         Bullet->velocityms = velocityms;
     }
+
+    recoilPitch += recoilKick;
+    recoilYaw += FMath::RandRange(-recoilShake, recoilShake);
 
 
     //if (MuzzleFlash)

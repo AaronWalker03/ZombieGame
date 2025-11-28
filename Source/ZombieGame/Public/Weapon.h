@@ -18,6 +18,15 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Mesh")
 	USkeletalMeshComponent* mesh;
 
+	float recoilImpulse;          // Newton-seconds
+	float recoilKick;             // degrees of vertical camera rise
+	float recoilShake;            // horizontal/irregular movement
+
+	// Runtime recoil state
+	float recoilPitch;
+	float recoilYaw;
+	float recoilRecoverySpeed = 10.0f;
+
 	//get weapon attachments and ajust for recoil
 	//also depending on the bullet used this will affect the recoil
 	//then assign somehwat random values for recoil 
@@ -46,14 +55,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float currentAmmo;
 
-	float recoilImpulse;          // Newton-seconds
-	float recoilKick;             // degrees of vertical camera rise
-	float recoilShake;            // horizontal/irregular movement
 
-	// Runtime recoil state
-	float recoilPitch;
-	float recoilYaw;
-	float recoilRecoverySpeed = 10.0f;
 
 	/*UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	UParticleSystem* MuzzleFlash;

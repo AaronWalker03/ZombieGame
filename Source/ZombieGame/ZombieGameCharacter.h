@@ -82,6 +82,8 @@ public:
 
 	void AddXP(int amount);
 
+	void Tick(float DeltaTime);
+
 	//call save file and get meshes saved
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Clothes Meshes")

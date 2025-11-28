@@ -95,6 +95,24 @@ void AZombieGameCharacter::BeginPlay()
 
 }
 
+void AZombieGameCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (EquippedWeapon)
+	{
+		// Apply recoil to pitch
+		AddControllerPitchInput(-EquippedWeapon->recoilPitch * DeltaTime * 5.0f);
+
+		// Apply recoil to yaw
+		AddControllerYawInput(EquippedWeapon->recoilYaw * DeltaTime * 10.0f);
+
+		// Recover over time
+		EquippedWeapon->recoilPitch = FMath::FInterpTo(EquippedWeapon->recoilPitch, 0.f, DeltaTime, EquippedWeapon->recoilRecoverySpeed);
+		EquippedWeapon->recoilYaw = FMath::FInterpTo(EquippedWeapon->recoilYaw, 0.f, DeltaTime, EquippedWeapon->recoilRecoverySpeed);
+	}
+
+}
 
 //savew file needs to be different because when adding xp manually saving to file each time but doesnt do the rest for some reason
 //otherwise make it when you die or extract it saves everything

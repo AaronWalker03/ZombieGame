@@ -203,81 +203,89 @@ void AZombieGameCharacter::ApplyCustomisation(const FPlayerCustomisationData& Da
 	USkeletalMeshComponent* MeshComp = GetMesh();
 	if (!MeshComp)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[%s] ApplyCustomisation: Mesh component is null!"), *GetName());
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
+				FString::Printf(TEXT("[%s] ApplyCustomisation: Mesh component is null!"), *GetName()));
+		}
 		return;
 	}
 
 	// Safely apply each wearable mesh only if the component exists
 	if (footWear)
 	{
-		if (Data.footWearMesh.IsValid()) footWear->SetSkeletalMesh(Data.footWearMesh.Get());
-		else footWear->SetSkeletalMesh(nullptr); // Clear if no mesh
+		footWear->SetSkeletalMesh(Data.footWearMesh.IsValid() ? Data.footWearMesh.Get() : nullptr);
 	}
-	else
+	else if (GEngine)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[%s] footWear component is null!"), *GetName());
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
+			FString::Printf(TEXT("[%s] footWear component is null!"), *GetName()));
 	}
 
 	if (legWear)
 	{
-		if (Data.legWearMesh.IsValid()) legWear->SetSkeletalMesh(Data.legWearMesh.Get());
-		else legWear->SetSkeletalMesh(nullptr);
+		legWear->SetSkeletalMesh(Data.legWearMesh.IsValid() ? Data.legWearMesh.Get() : nullptr);
 	}
-	else
+	else if (GEngine)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[%s] legWear component is null!"), *GetName());
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
+			FString::Printf(TEXT("[%s] legWear component is null!"), *GetName()));
 	}
 
 	if (tshirtWear)
 	{
-		if (Data.tshirtWearMesh.IsValid()) tshirtWear->SetSkeletalMesh(Data.tshirtWearMesh.Get());
-		else tshirtWear->SetSkeletalMesh(nullptr);
+		tshirtWear->SetSkeletalMesh(Data.tshirtWearMesh.IsValid() ? Data.tshirtWearMesh.Get() : nullptr);
 	}
-	else
+	else if (GEngine)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[%s] tshirtWear component is null!"), *GetName());
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
+			FString::Printf(TEXT("[%s] tshirtWear component is null!"), *GetName()));
 	}
 
 	if (jacketWear)
 	{
-		if (Data.jacketWearMesh.IsValid()) jacketWear->SetSkeletalMesh(Data.jacketWearMesh.Get());
-		else jacketWear->SetSkeletalMesh(nullptr);
+		jacketWear->SetSkeletalMesh(Data.jacketWearMesh.IsValid() ? Data.jacketWearMesh.Get() : nullptr);
 	}
-	else
+	else if (GEngine)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[%s] jacketWear component is null!"), *GetName());
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
+			FString::Printf(TEXT("[%s] jacketWear component is null!"), *GetName()));
 	}
 
 	if (faceWear)
 	{
-		if (Data.faceWearMesh.IsValid()) faceWear->SetSkeletalMesh(Data.faceWearMesh.Get());
-		else faceWear->SetSkeletalMesh(nullptr);
+		faceWear->SetSkeletalMesh(Data.faceWearMesh.IsValid() ? Data.faceWearMesh.Get() : nullptr);
 	}
-	else
+	else if (GEngine)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[%s] faceWear component is null!"), *GetName());
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
+			FString::Printf(TEXT("[%s] faceWear component is null!"), *GetName()));
 	}
 
 	// Spawn the weapon only if the class is valid
 	if (Data.weaponClass.IsValid() && GetWorld())
 	{
 		AWeapon* WeaponToSpawn = GetWorld()->SpawnActor<AWeapon>(Data.weaponClass.Get());
-		if (!WeaponToSpawn)
+		if (!WeaponToSpawn && GEngine)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[%s] Failed to spawn weapon!"), *GetName());
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
+				FString::Printf(TEXT("[%s] Failed to spawn weapon!"), *GetName()));
 		}
 	}
-	else if (!Data.weaponClass.IsValid())
+	else if (!Data.weaponClass.IsValid() && GEngine)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[%s] Weapon class is invalid!"), *GetName());
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
+			FString::Printf(TEXT("[%s] Weapon class is invalid!"), *GetName()));
 	}
 
 	// Debug message for successful application
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow,
-		FString::Printf(TEXT("Customisation applied safely for %s"), *GetName()));
-
-	UE_LOG(LogTemp, Log, TEXT("[%s] Customisation applied safely."), *GetName());
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow,
+			FString::Printf(TEXT("Customisation applied safely for %s"), *GetName()));
+	}
 }
+
 
 
 void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

@@ -83,18 +83,18 @@ AZombieGameCharacter::AZombieGameCharacter()
 	faceWear = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("faceWear"));
 	faceWear->SetupAttachment(GetMesh());	
 
-	//bReplicates = true;
+	bReplicates = true;
 }
 
 void AZombieGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	/*if (IsLocallyControlled())
+	if (IsLocallyControlled())
 	{
 		LoadCustomisationFromSave();
 		Server_SendCustomisation(PlayerCustomisation);
-	}*/
+	}
 
 	LoadCustomisation();
 

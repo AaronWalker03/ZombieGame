@@ -199,20 +199,86 @@ void AZombieGameCharacter::OnRep_Customisation()
 
 void AZombieGameCharacter::ApplyCustomisation(const FPlayerCustomisationData& Data)
 {
-	
-	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	// Ensure the character's mesh exists
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if (!MeshComp)
 	{
-		footWear->SetSkeletalMesh(Data.footWearMesh.Get());
-		legWear->SetSkeletalMesh(Data.legWearMesh.Get());
-		tshirtWear->SetSkeletalMesh(Data.tshirtWearMesh.Get());
-		jacketWear->SetSkeletalMesh(Data.jacketWearMesh.Get());
-		faceWear->SetSkeletalMesh(Data.faceWearMesh.Get());
-		AWeapon* WeaponToSpawn = GetWorld()->SpawnActor<AWeapon>(Data.weaponClass.Get());
+		UE_LOG(LogTemp, Warning, TEXT("[%s] ApplyCustomisation: Mesh component is null!"), *GetName());
+		return;
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Customisation applied for %s"), *GetName()) 
-	);
+	// Safely apply each wearable mesh only if the component exists
+	if (footWear)
+	{
+		if (Data.footWearMesh.IsValid()) footWear->SetSkeletalMesh(Data.footWearMesh.Get());
+		else footWear->SetSkeletalMesh(nullptr); // Clear if no mesh
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[%s] footWear component is null!"), *GetName());
+	}
+
+	if (legWear)
+	{
+		if (Data.legWearMesh.IsValid()) legWear->SetSkeletalMesh(Data.legWearMesh.Get());
+		else legWear->SetSkeletalMesh(nullptr);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[%s] legWear component is null!"), *GetName());
+	}
+
+	if (tshirtWear)
+	{
+		if (Data.tshirtWearMesh.IsValid()) tshirtWear->SetSkeletalMesh(Data.tshirtWearMesh.Get());
+		else tshirtWear->SetSkeletalMesh(nullptr);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[%s] tshirtWear component is null!"), *GetName());
+	}
+
+	if (jacketWear)
+	{
+		if (Data.jacketWearMesh.IsValid()) jacketWear->SetSkeletalMesh(Data.jacketWearMesh.Get());
+		else jacketWear->SetSkeletalMesh(nullptr);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[%s] jacketWear component is null!"), *GetName());
+	}
+
+	if (faceWear)
+	{
+		if (Data.faceWearMesh.IsValid()) faceWear->SetSkeletalMesh(Data.faceWearMesh.Get());
+		else faceWear->SetSkeletalMesh(nullptr);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[%s] faceWear component is null!"), *GetName());
+	}
+
+	// Spawn the weapon only if the class is valid
+	if (Data.weaponClass.IsValid() && GetWorld())
+	{
+		AWeapon* WeaponToSpawn = GetWorld()->SpawnActor<AWeapon>(Data.weaponClass.Get());
+		if (!WeaponToSpawn)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[%s] Failed to spawn weapon!"), *GetName());
+		}
+	}
+	else if (!Data.weaponClass.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[%s] Weapon class is invalid!"), *GetName());
+	}
+
+	// Debug message for successful application
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow,
+		FString::Printf(TEXT("Customisation applied safely for %s"), *GetName()));
+
+	UE_LOG(LogTemp, Log, TEXT("[%s] Customisation applied safely."), *GetName());
 }
+
 
 void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

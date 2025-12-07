@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "Public/Weapon.h"
+#include "PlayerCustomisationStruct.h"
 #include "ZombieGameCharacter.generated.h"
 
 class UInputComponent;
@@ -34,6 +35,39 @@ class AZombieGameCharacter : public ACharacter
 	UCameraComponent* FirstPersonCameraComponent;
 
 protected:
+
+	//
+   // 1. REPLICATED CUSTOMISATION DATA
+   //
+	UPROPERTY(ReplicatedUsing = OnRep_Customisation)
+	FPlayerCustomisationData PlayerCustomisation;
+
+	//
+	// 2. CALLED ON CLIENT WHEN PlayerCustomisation UPDATES
+	//
+	UFUNCTION()
+	void OnRep_Customisation();
+
+	//
+	// 3. CLIENT  SERVER SENDS ITS CUSTOMISATION
+	//
+	UFUNCTION(Server, Reliable)
+	void Server_SendCustomisation(const FPlayerCustomisationData& Data);
+
+	//
+	// 4. APPLY CUSTOMISATION LOCALLY
+	//
+	void ApplyCustomisation(const FPlayerCustomisationData& Data);
+
+	//
+	// 5. LOAD SAVEGAME ON THE LOCAL CLIENT
+	//
+
+
+	void LoadCustomisationFromSave();
+
+
+
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
@@ -71,6 +105,9 @@ protected:
 	int currentXP;
 	
 public:
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	AZombieGameCharacter();
 
 	void BeginPlay();
@@ -108,7 +145,7 @@ public:
 	void ChangeWeapon(TSubclassOf<AWeapon> NewWeaponClass);
 
 	/** Property replication */
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	//void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/** Getter for Max Health.*/
 	UFUNCTION(BlueprintPure, Category = "Health")

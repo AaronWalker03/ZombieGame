@@ -12,7 +12,9 @@
 #include "Engine/Engine.h"
 #include "ZombieGameProjectile.h"
 #include "PlayerCustomisationSave.h"
+#include "PlayerCustomisationStruct.h"
 #include <Kismet/GameplayStatics.h>
+
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -80,11 +82,19 @@ AZombieGameCharacter::AZombieGameCharacter()
 
 	faceWear = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("faceWear"));
 	faceWear->SetupAttachment(GetMesh());	
+
+	bReplicates = true;
 }
 
 void AZombieGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (IsLocallyControlled())
+	{
+		LoadCustomisationFromSave();
+		Server_SendCustomisation(PlayerCustomisation);
+	}
 
 	LoadCustomisation();
 
@@ -114,7 +124,7 @@ void AZombieGameCharacter::Tick(float DeltaTime)
 
 }
 
-//savew file needs to be different because when adding xp manually saving to file each time but doesnt do the rest for some reason
+//save file needs to be different because when adding xp manually saving to file each time but doesnt do the rest for some reason
 //otherwise make it when you die or extract it saves everything
 
 void AZombieGameCharacter::SaveCustomisation()
@@ -149,6 +159,67 @@ void AZombieGameCharacter::LoadCustomisation()
 		DefaultWeaponClass = SaveObj->weaponClass.Get();
 		currentXP = SaveObj->currentXP;
 	}
+}
+
+void AZombieGameCharacter::LoadCustomisationFromSave()
+{
+	if (UGameplayStatics::DoesSaveGameExist(TEXT("PlayerSave"), 0))
+	{
+		UPlayerCustomisationSave* Save =
+			Cast<UPlayerCustomisationSave>(UGameplayStatics::LoadGameFromSlot(TEXT("PlayerSave"), 0));
+
+		if (Save)
+		{
+			PlayerCustomisation.footWearMesh = Save->footWearMesh;
+			PlayerCustomisation.legWearMesh = Save->legWearMesh;
+			PlayerCustomisation.tshirtWearMesh = Save->tshirtWearMesh;
+			PlayerCustomisation.jacketWearMesh = Save->jacketWearMesh;
+			PlayerCustomisation.faceWearMesh = Save->faceWearMesh;
+
+			PlayerCustomisation.weaponClass = Save->weaponClass;
+
+			PlayerCustomisation.playerLevel = Save->playerLevel;
+			PlayerCustomisation.currentXP = Save->currentXP;
+		}
+	}
+}
+
+void AZombieGameCharacter::Server_SendCustomisation_Implementation(const FPlayerCustomisationData& Data)
+{
+	PlayerCustomisation = Data;
+
+	// Server also applies it so it replicates to others
+	ApplyCustomisation(PlayerCustomisation);
+}
+
+void AZombieGameCharacter::OnRep_Customisation()
+{
+	ApplyCustomisation(PlayerCustomisation);
+}
+
+void AZombieGameCharacter::ApplyCustomisation(const FPlayerCustomisationData& Data)
+{
+	
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		footWear->SetSkeletalMesh(Data.footWearMesh.Get());
+		legWear->SetSkeletalMesh(Data.legWearMesh.Get());
+		tshirtWear->SetSkeletalMesh(Data.tshirtWearMesh.Get());
+		jacketWear->SetSkeletalMesh(Data.jacketWearMesh.Get());
+		faceWear->SetSkeletalMesh(Data.faceWearMesh.Get());
+		AWeapon* WeaponToSpawn = GetWorld()->SpawnActor<AWeapon>(Data.weaponClass.Get());
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Customisation applied for %s"), *GetName()) 
+	);
+}
+
+void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AZombieGameCharacter, PlayerCustomisation);
+	DOREPLIFETIME(AZombieGameCharacter, CurrentHealth);
 }
 
 void AZombieGameCharacter::AddXP(int amount)
@@ -210,14 +281,6 @@ void AZombieGameCharacter::ChangeWeapon(TSubclassOf<AWeapon> NewWeaponClass)
 
 		SpawnWeapon();
 	}
-}
-
-void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	//Replicate current health.
-	DOREPLIFETIME(AZombieGameCharacter, CurrentHealth);
 }
 
 void AZombieGameCharacter::OnHealthUpdate()

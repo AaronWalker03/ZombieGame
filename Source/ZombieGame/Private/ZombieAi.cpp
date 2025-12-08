@@ -244,6 +244,11 @@ void AZombieAi::DismemberLimb(UPrimitiveComponent* HitComp)
     } 
 }
 
+UBehaviorTree* AZombieAi::GetBehaviourTree() const
+{
+    return Tree;
+}
+
 // Called every frame
 void AZombieAi::Tick(float DeltaTime)
 {

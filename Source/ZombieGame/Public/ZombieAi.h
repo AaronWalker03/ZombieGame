@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "ZombieAi.generated.h"
 
 //implement ai reacting to gunshot sounds, decibels could be implemented for hearing range
@@ -70,6 +71,8 @@ public:
 
 	UFUNCTION()
 	void DismemberLimb(UPrimitiveComponent* HitComp);
+
+	UBehaviorTree* GetBehaviourTree() const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -156,6 +159,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	APawn* TargetPlayer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta=(AllowPrivateAccess="true"))
+	UBehaviorTree* Tree;
 
 	//DO NOT FUCKING TOUCH THESE
 	UFUNCTION()

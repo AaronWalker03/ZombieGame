@@ -15,7 +15,7 @@ UBTTask_ChasePlayer::UBTTask_ChasePlayer(FObjectInitializer const& ObjectInitial
 
 EBTNodeResult::Type UBTTask_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	// get player character of index
+	// get ai controller
 	if (AZombie_AIController* const Controller = Cast<AZombie_AIController>(OwnerComp.GetAIOwner()))
 	{
 		// get player location from blackboard key

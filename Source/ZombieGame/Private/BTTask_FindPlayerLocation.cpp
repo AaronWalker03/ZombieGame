@@ -14,7 +14,7 @@ UBTTask_FindPlayerLocation::UBTTask_FindPlayerLocation(FObjectInitializer const&
 
 EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	// get player character of index
+	// get player character at index
 	if (ACharacter* const Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))
 	{
 		// get player location

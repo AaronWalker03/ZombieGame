@@ -115,15 +115,24 @@ void AZombieGameCharacter::Tick(float DeltaTime)
 
 	if (EquippedWeapon)
 	{
-		// Apply recoil to pitch
-		AddControllerPitchInput(-EquippedWeapon->recoilPitch * DeltaTime * 5.0f);
+		float pitchStep = EquippedWeapon->recoilPitch * DeltaTime * 20.0f;
+		float yawStep = EquippedWeapon->recoilYaw * DeltaTime * 20.0f;
 
-		// Apply recoil to yaw
-		AddControllerYawInput(EquippedWeapon->recoilYaw * DeltaTime * 10.0f);
+		AddControllerPitchInput(-pitchStep);
+		AddControllerYawInput(yawStep);
 
-		// Recover over time
-		EquippedWeapon->recoilPitch = FMath::FInterpTo(EquippedWeapon->recoilPitch, 0.f, DeltaTime, EquippedWeapon->recoilRecoverySpeed);
-		EquippedWeapon->recoilYaw = FMath::FInterpTo(EquippedWeapon->recoilYaw, 0.f, DeltaTime, EquippedWeapon->recoilRecoverySpeed);
+		// Remove what we just applied
+		EquippedWeapon->recoilPitch -= pitchStep;
+		EquippedWeapon->recoilYaw -= yawStep;
+
+		// Smooth recovery (weapon settles back)
+		EquippedWeapon->recoilPitch = FMath::FInterpTo(
+			EquippedWeapon->recoilPitch, 0.f, DeltaTime,
+			EquippedWeapon->recoilRecoverySpeed);
+
+		EquippedWeapon->recoilYaw = FMath::FInterpTo(
+			EquippedWeapon->recoilYaw, 0.f, DeltaTime,
+			EquippedWeapon->recoilRecoverySpeed);
 	}
 
 }

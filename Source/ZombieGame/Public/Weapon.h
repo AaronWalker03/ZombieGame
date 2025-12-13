@@ -28,6 +28,22 @@ public:
 	float recoilYaw;
 	float recoilRecoverySpeed = 10.0f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Recoil|Physics")
+	float WeaponMassKG = 3.1f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Recoil|Physics")
+	float StockLeverage = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Recoil|Physics")
+	float GasMassFraction = 0.4f; // rifles ~0.3–0.5
+
+	UPROPERTY(EditDefaultsOnly, Category = "Recoil|Physics")
+	float GasVelocityMultiplier = 1.5f; // gas exits faster than bullet
+
+	UPROPERTY(EditDefaultsOnly, Category = "Recoil|Gameplay")
+	float RecoilToDegrees = 18.0f;
+
+
 	//get weapon attachments and ajust for recoil
 	//also depending on the bullet used this will affect the recoil
 	//then assign somehwat random values for recoil 

@@ -241,5 +241,11 @@ public:
 	/** Returns first person camera component **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+	private:
+		
+		class UAIPerceptionStimuliSourceComponent* StimulusSource;
+
+		void SetupStimulusSource();
+
 };
 

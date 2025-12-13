@@ -14,6 +14,8 @@
 #include "PlayerCustomisationSave.h"
 #include "PlayerCustomisationStruct.h"
 #include <Kismet/GameplayStatics.h>
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISense_Sight.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -84,6 +86,8 @@ AZombieGameCharacter::AZombieGameCharacter()
 	faceWear->SetupAttachment(GetMesh());	
 
 	bReplicates = true;
+
+	SetupStimulusSource();
 }
 
 void AZombieGameCharacter::BeginPlay()
@@ -410,6 +414,17 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 	// Handle firing projectiles
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AZombieGameCharacter::OnFire);
+}
+
+void AZombieGameCharacter::SetupStimulusSource()
+{
+	StimulusSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus"));
+
+	if (StimulusSource)
+	{
+		StimulusSource->RegisterForSense(TSubclassOf<UAISense_Sight>());
+		StimulusSource->RegisterWithPerceptionSystem();
+	}
 }
 
 //logic that gets sent over to weapon class

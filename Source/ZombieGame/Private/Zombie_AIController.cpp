@@ -5,6 +5,7 @@
 #include "ZombieAi.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include "Perception/AISenseConfig_Hearing.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "ZombieGameCharacter.h"
 
@@ -32,30 +33,56 @@ void AZombie_AIController::OnPossess(APawn* InPawn)
 void AZombie_AIController::SetupPerceptionSystem()
 {
 	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
+	HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("Hearing Config"));
 
 	if (SightConfig)
 	{
-		SetPerceptionComponent(*CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("Perception Component")));
-
 		SightConfig->SightRadius = 500.0f;
 		SightConfig->LoseSightRadius = SightConfig->SightRadius + 25.0f;
 		SightConfig->PeripheralVisionAngleDegrees = 90.0f;
-		SightConfig->SetMaxAge(5.0f);
+		SightConfig->SetMaxAge(5.0f); // Length of time till stimulus is forgotten
 		SightConfig->AutoSuccessRangeFromLastSeenLocation = 520.0f;
+
 		SightConfig->DetectionByAffiliation.bDetectEnemies = true;
 		SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
 		SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
+	}
+
+	if (HearingConfig)
+	{
+		HearingConfig->HearingRange = 700.0f;
+		HearingConfig->SetMaxAge(15.0f);
+
+		HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
+		HearingConfig->DetectionByAffiliation.bDetectFriendlies = true;
+		HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
+	}
+
+	if (SightConfig && HearingConfig)
+	{
+		SetPerceptionComponent(*CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("Perception Component")));
 
 		GetPerceptionComponent()->SetDominantSense(*SightConfig->GetSenseImplementation());
-		GetPerceptionComponent()->OnTargetPerceptionUpdated.AddDynamic(this, &AZombie_AIController::OnTargetDetected);
+		GetPerceptionComponent()->OnTargetPerceptionUpdated.AddDynamic(this, &AZombie_AIController::OnTargetSpotted);
+		GetPerceptionComponent()->ConfigureSense(*SightConfig);
+
+		GetPerceptionComponent()->OnTargetPerceptionUpdated.AddDynamic(this, &AZombie_AIController::OnTargetHeard);
 		GetPerceptionComponent()->ConfigureSense(*SightConfig);
 	}
 }
 
-void AZombie_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus)
+void AZombie_AIController::OnTargetSpotted(AActor* Actor, FAIStimulus const Stimulus)
 {
 	if (AZombieGameCharacter* const Player = Cast<AZombieGameCharacter>(Actor))
 	{
 		GetBlackboardComponent()->SetValueAsBool("PlayerVisible", Stimulus.WasSuccessfullySensed());
+	}
+}
+
+void AZombie_AIController::OnTargetHeard(AActor* Actor, FAIStimulus const Stimulus)
+{
+	if (AZombieGameCharacter* const Player = Cast<AZombieGameCharacter>(Actor))
+	{
+		GetBlackboardComponent()->SetValueAsBool("PlayerHeard", Stimulus.WasSuccessfullySensed());
 	}
 }

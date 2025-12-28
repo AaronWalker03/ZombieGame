@@ -249,6 +249,11 @@ UBehaviorTree* AZombieAi::GetBehaviourTree() const
     return Tree;
 }
 
+int AZombieAi::MeleeAttack_Implementation()
+{
+    return 0;
+}
+
 // Called every frame
 void AZombieAi::Tick(float DeltaTime)
 {

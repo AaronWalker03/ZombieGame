@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "BehaviorTree/BehaviorTree.h"
+#include "CombatInterface.h"
 #include "ZombieAi.generated.h"
 
 //implement ai reacting to gunshot sounds, decibels could be implemented for hearing range
@@ -60,7 +61,7 @@ struct FLimbData
 };
 
 UCLASS()
-class ZOMBIEGAME_API AZombieAi : public ACharacter
+class ZOMBIEGAME_API AZombieAi : public ACharacter, public ICombatInterface
 {
 	GENERATED_BODY()
 
@@ -73,6 +74,8 @@ public:
 	void DismemberLimb(UPrimitiveComponent* HitComp);
 
 	UBehaviorTree* GetBehaviourTree() const;
+
+	int MeleeAttack_Implementation() override;
 
 protected:
 	virtual void BeginPlay() override;

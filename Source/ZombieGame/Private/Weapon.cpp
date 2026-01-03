@@ -133,11 +133,6 @@ void AWeapon::Shoot()
     //}
 }
 
-void AWeapon::Aim()
-{
-    //aim
-}
-
 void AWeapon::Reload()
 {
     UE_LOG(LogTemp, Warning, TEXT("Base Weapon Reload"));

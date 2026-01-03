@@ -21,6 +21,9 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 //^^^already have XP and player level implemented
 //can easily make this exponential
 
+//need to make a behaviour tree for animations
+//also need to sort out which mesh is seen by the player and which is being sent to server (for others)
+
 UCLASS(abstract)
 class AZombieGameCharacter : public ACharacter
 {
@@ -121,6 +124,9 @@ public:
 
 	void Tick(float DeltaTime);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aiming Bool")
+	bool bIsAiming = false;
+
 	//call save file and get meshes saved
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Clothes Meshes")
@@ -172,7 +178,13 @@ protected:
 	void LookInput(const FInputActionValue& Value);
 
 	void OnFire();
-	void OnAim();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimSequence* aimAnimation;
+
+	
+	void StartAim();
+	void StopAim();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TSubclassOf<AWeapon> DefaultWeaponClass;

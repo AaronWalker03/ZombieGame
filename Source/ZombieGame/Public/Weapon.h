@@ -100,9 +100,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Shoot();
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	virtual void Aim();
-
 	// Reload function
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Reload();

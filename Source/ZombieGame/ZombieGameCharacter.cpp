@@ -415,7 +415,8 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::LookInput);
 
-		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::OnAim);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::StartAim);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopAim);
 	}
 	else
 	{
@@ -444,9 +445,14 @@ void AZombieGameCharacter::OnFire()
 	EquippedWeapon->Shoot();
 }
 
-void AZombieGameCharacter::OnAim()
+void AZombieGameCharacter::StartAim()
 {
-	EquippedWeapon->Aim();
+	bIsAiming = true;
+}
+
+void AZombieGameCharacter::StopAim()
+{
+	bIsAiming = false;
 }
 
 //this no use anymore 

@@ -67,10 +67,10 @@ protected:
 	TSubclassOf<AAmmunition> ammunitionType;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	float magCapacity;
+	int magCapacity;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	float currentAmmo;
+	int currentAmmo;
 
 
 

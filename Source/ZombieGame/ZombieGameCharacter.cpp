@@ -6,7 +6,9 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include <InputAction.h>
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
@@ -19,6 +21,7 @@
 #include "Perception/AISenseConfig_Hearing.h"
 
 
+
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
@@ -27,6 +30,11 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //could add dismemberent for players? if you get bitten in multiplayer to stay alive longer chop a limb off? 
 //would potentially require new animations tho
+
+//implement reload system and mag check
+//pressing r once slowly reloads while keeping the mag
+//double tap r quick reload but lose the mag, conveniant if you fully empty
+//hold r mag check see how much ammo left
 
 
 AZombieGameCharacter::AZombieGameCharacter()
@@ -114,6 +122,13 @@ void AZombieGameCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+
+	//if startaim == true
+	//manually move up the arms and weapon so it reaches the lign of site of the player
+
+
+
+	//recoil still to be reworked later
 	if (EquippedWeapon)
 	{
 		float pitchStep = EquippedWeapon->recoilPitch * DeltaTime * 20.0f;
@@ -300,8 +315,6 @@ void AZombieGameCharacter::ApplyCustomisation(const FPlayerCustomisationData& Da
 	}
 }
 
-
-
 void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -417,6 +430,11 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::StartAim);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopAim);
+
+		EnhancedInputComponent->BindAction(simpleReload, ETriggerEvent::Started, this, &AZombieGameCharacter::SimpleReload);
+		EnhancedInputComponent->BindAction(speedReload, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SpeedReload);
+		EnhancedInputComponent->BindAction(magCheck, ETriggerEvent::Completed, this, &AZombieGameCharacter::MagCheck);
+
 	}
 	else
 	{
@@ -439,7 +457,6 @@ void AZombieGameCharacter::SetupStimulusSource()
 	}
 }
 
-//logic that gets sent over to weapon class
 void AZombieGameCharacter::OnFire()
 {
 	EquippedWeapon->Shoot();
@@ -455,34 +472,23 @@ void AZombieGameCharacter::StopAim()
 	bIsAiming = false;
 }
 
-//this no use anymore 
-//void AZombieGameCharacter::StartFire()
-//{
-//	if (!bIsFiringWeapon)
-//	{
-//		bIsFiringWeapon = true;
-//		UWorld* World = GetWorld();
-//		World->GetTimerManager().SetTimer(FiringTimer, this, &AZombieGameCharacter::StopFire, FireRate, false);
-//		HandleFire();
-//	}
-//}
-//
-//void AZombieGameCharacter::StopFire()
-//{
-//	bIsFiringWeapon = false;
-//}
-//
-//void AZombieGameCharacter::HandleFire_Implementation()
-//{
-//	FVector spawnLocation = GetActorLocation() + (GetActorRotation().Vector() * 100.0f) + (GetActorUpVector() * 50.0f);
-//	FRotator spawnRotation = GetActorRotation();
-//
-//	FActorSpawnParameters spawnParameters;
-//	spawnParameters.Instigator = GetInstigator();
-//	spawnParameters.Owner = this;
-//
-//	AZombieGameProjectile* spawnedProjectile = GetWorld()->SpawnActor<AZombieGameProjectile>(spawnLocation, spawnRotation, spawnParameters);
-//}
+void AZombieGameCharacter::SimpleReload()
+{
+	bIsReloading = true;
+	//keep mag so more ammo can be put into it later
+	//if lose the mag you lost it for the rest of the game i guess?
+}
+
+void AZombieGameCharacter::SpeedReload()
+{
+	magCount = magCount - 1;
+	bIsReloading = true;
+}
+
+void AZombieGameCharacter::MagCheck()
+{
+	//use currentAmmo to make this come up in the UI
+}
 
 void AZombieGameCharacter::SetCurrentHealth(float healthValue)
 {

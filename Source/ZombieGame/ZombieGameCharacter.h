@@ -9,11 +9,14 @@
 #include "PlayerCustomisationStruct.h"
 #include "ZombieGameCharacter.generated.h"
 
+
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
 class UInputAction;
+class UAnimMontage;
 struct FInputActionValue;
+struct FInputActionInstance;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -71,6 +74,15 @@ protected:
 
 
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* simpleReload;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* speedReload;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* magCheck;
+
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
@@ -124,8 +136,11 @@ public:
 
 	void Tick(float DeltaTime);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aiming Bool")
 	bool bIsAiming = false;
+	bool bIsReloading = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mag Count")
+	int magCount = 4;
 
 	//call save file and get meshes saved
 
@@ -178,13 +193,28 @@ protected:
 	void LookInput(const FInputActionValue& Value);
 
 	void OnFire();
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimSequence* aimAnimation;
-
 	
 	void StartAim();
 	void StopAim();
+
+	void SimpleReload();
+	void SpeedReload();
+	void MagCheck();
+
+	
+	
+	//should probably change this to weapon specific animation
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Animations")
+	UAnimMontage* regularReloadMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Animations")
+	UAnimMontage* speedReloadMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Animations")
+	UAnimMontage* magCheckMontage;
+
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TSubclassOf<AWeapon> DefaultWeaponClass;

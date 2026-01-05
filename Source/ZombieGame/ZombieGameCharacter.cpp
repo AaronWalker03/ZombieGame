@@ -115,7 +115,6 @@ void AZombieGameCharacter::BeginPlay()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, XPMessage);
 
 	SpawnWeapon();
-
 }
 
 void AZombieGameCharacter::Tick(float DeltaTime)
@@ -123,32 +122,41 @@ void AZombieGameCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 
-	//if startaim == true
-	//manually move up the arms and weapon so it reaches the lign of site of the player
-
-
-
-	//recoil still to be reworked later
 	if (EquippedWeapon)
 	{
-		float pitchStep = EquippedWeapon->recoilPitch * DeltaTime * 20.0f;
-		float yawStep = EquippedWeapon->recoilYaw * DeltaTime * 20.0f;
+		
+		// Get current relative transform
+		FTransform Current = EquippedWeapon->mesh->GetRelativeTransform();
 
-		AddControllerPitchInput(-pitchStep);
-		AddControllerYawInput(yawStep);
+		// Decide target transform
+		FTransform Target = bIsAiming ? TargetADSTransform : DefaultWeaponTransform;
 
-		// Remove what we just applied
-		EquippedWeapon->recoilPitch -= pitchStep;
-		EquippedWeapon->recoilYaw -= yawStep;
+		// Smoothly interpolate to target
+		FTransform NewTransform;
+		NewTransform.Blend(Current, Target, DeltaTime * ADSInterpSpeed);
 
-		// Smooth recovery (weapon settles back)
-		EquippedWeapon->recoilPitch = FMath::FInterpTo(
-			EquippedWeapon->recoilPitch, 0.f, DeltaTime,
-			EquippedWeapon->recoilRecoverySpeed);
+		EquippedWeapon->mesh->SetRelativeTransform(NewTransform);
+		
 
-		EquippedWeapon->recoilYaw = FMath::FInterpTo(
-			EquippedWeapon->recoilYaw, 0.f, DeltaTime,
-			EquippedWeapon->recoilRecoverySpeed);
+
+		//float pitchStep = EquippedWeapon->recoilPitch * DeltaTime * 20.0f;
+		//float yawStep = EquippedWeapon->recoilYaw * DeltaTime * 20.0f;
+
+		//AddControllerPitchInput(-pitchStep);
+		//AddControllerYawInput(yawStep);
+
+		//// Remove what we just applied
+		//EquippedWeapon->recoilPitch -= pitchStep;
+		//EquippedWeapon->recoilYaw -= yawStep;
+
+		//// Smooth recovery (weapon settles back)
+		//EquippedWeapon->recoilPitch = FMath::FInterpTo(
+		//	EquippedWeapon->recoilPitch, 0.f, DeltaTime,
+		//	EquippedWeapon->recoilRecoverySpeed);
+
+		//EquippedWeapon->recoilYaw = FMath::FInterpTo(
+		//	EquippedWeapon->recoilYaw, 0.f, DeltaTime,
+		//	EquippedWeapon->recoilRecoverySpeed);
 	}
 
 }
@@ -337,7 +345,7 @@ void AZombieGameCharacter::AddXP(int amount)
 
 void AZombieGameCharacter::SpawnWeapon()
 {
-	// maybe make it so that the arm attaches to the front grip too?? not sure if sockets would allow that tho
+	// maybe make it so that the hand attaches to the front grip too?? not sure if sockets would allow that tho
 
 
 	if (!EquippedWeapon && DefaultWeaponClass)
@@ -363,6 +371,8 @@ void AZombieGameCharacter::SpawnWeapon()
 			);
 
 			EquippedWeapon = MyWeapon;
+
+			DefaultWeaponTransform = EquippedWeapon->mesh->GetRelativeTransform();
 		}
 	}
 }
@@ -429,7 +439,7 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::LookInput);
 
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::StartAim);
-		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopAim);
+		//EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopAim);
 
 		EnhancedInputComponent->BindAction(simpleReload, ETriggerEvent::Started, this, &AZombieGameCharacter::SimpleReload);
 		EnhancedInputComponent->BindAction(speedReload, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SpeedReload);
@@ -465,22 +475,51 @@ void AZombieGameCharacter::OnFire()
 void AZombieGameCharacter::StartAim()
 {
 	bIsAiming = true;
+	UpdateADSTransform();
 }
+
+//hold breathe maybe?
 
 void AZombieGameCharacter::StopAim()
 {
 	bIsAiming = false;
 }
 
+void AZombieGameCharacter::UpdateADSTransform()
+{
+	if (!EquippedWeapon || !FirstPersonCameraComponent) return;
+
+	USkeletalMeshComponent* WeaponMesh = EquippedWeapon->mesh;
+
+	// Location of the weapon's "adsSocket" in world space
+	FVector SocketWorld = WeaponMesh->GetSocketLocation("adsSocket");
+
+	// Camera location and forward vector
+	FVector CameraLocation = FirstPersonCameraComponent->GetComponentLocation();
+	FVector CameraForward = FirstPersonCameraComponent->GetForwardVector();
+
+	// Desired distance in front of camera for ADS
+	float DesiredDistance = 50.f; // tweak this to match how close the weapon should be
+	FVector DesiredWorldPos = CameraLocation + CameraForward * DesiredDistance;
+
+	// Calculate the offset from the weapon's socket to the desired position
+	FVector LocalOffset = WeaponMesh->GetComponentTransform().InverseTransformVector(DesiredWorldPos - SocketWorld);
+
+	// Apply offset to the default weapon transform
+	TargetADSTransform = DefaultWeaponTransform;
+	TargetADSTransform.AddToTranslation(LocalOffset);
+}
+
 void AZombieGameCharacter::SimpleReload()
 {
 	bIsReloading = true;
 	//keep mag so more ammo can be put into it later
-	//if lose the mag you lost it for the rest of the game i guess?
+	
 }
 
 void AZombieGameCharacter::SpeedReload()
 {
+	//if lose the mag you lost it for the rest of the game i guess?
 	magCount = magCount - 1;
 	bIsReloading = true;
 }
@@ -488,6 +527,10 @@ void AZombieGameCharacter::SpeedReload()
 void AZombieGameCharacter::MagCheck()
 {
 	//use currentAmmo to make this come up in the UI
+	//show how many mags are left too?
+	//make it so mag gets taken out and visually inspected? animation or hardcoded values?	
+	int ammoInMag = EquippedWeapon->currentAmmo;
+	
 }
 
 void AZombieGameCharacter::SetCurrentHealth(float healthValue)

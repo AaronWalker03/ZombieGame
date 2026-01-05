@@ -69,7 +69,6 @@ protected:
 	// 5. LOAD SAVEGAME ON THE LOCAL CLIENT
 	//
 
-
 	void LoadCustomisationFromSave();
 
 
@@ -139,6 +138,12 @@ public:
 	bool bIsAiming = false;
 	bool bIsReloading = false;
 
+	FTransform DefaultWeaponTransform;
+	FTransform TargetADSTransform;
+
+	float ADSInterpSpeed = 15.f;
+
+	//change this to a list, so can have specific ammo per mag
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mag Count")
 	int magCount = 4;
 
@@ -158,7 +163,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Clothes Meshes")
 	USkeletalMeshComponent* faceWear;
-
 
 	void SpawnWeapon();
 
@@ -201,6 +205,7 @@ protected:
 	void SpeedReload();
 	void MagCheck();
 
+	void UpdateADSTransform();
 	
 	
 	//should probably change this to weapon specific animation

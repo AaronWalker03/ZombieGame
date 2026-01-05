@@ -43,6 +43,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Recoil|Gameplay")
 	float RecoilToDegrees = 18.0f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	int currentAmmo;
+
 
 	//get weapon attachments and ajust for recoil
 	//also depending on the bullet used this will affect the recoil
@@ -69,8 +72,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	int magCapacity;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	int currentAmmo;
+	
 
 
 

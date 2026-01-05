@@ -72,6 +72,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	int magCapacity;
 
+	//maybe add time to reload?
 	
 
 

@@ -67,7 +67,7 @@ void AZombie_AIController::SetupPerceptionSystem()
 		GetPerceptionComponent()->ConfigureSense(*SightConfig);
 
 		GetPerceptionComponent()->OnTargetPerceptionUpdated.AddDynamic(this, &AZombie_AIController::OnTargetHeard);
-		GetPerceptionComponent()->ConfigureSense(*SightConfig);
+		GetPerceptionComponent()->ConfigureSense(*HearingConfig);
 	}
 }
 
@@ -76,6 +76,7 @@ void AZombie_AIController::OnTargetSpotted(AActor* Actor, FAIStimulus const Stim
 	if (AZombieGameCharacter* const Player = Cast<AZombieGameCharacter>(Actor))
 	{
 		GetBlackboardComponent()->SetValueAsBool("PlayerVisible", Stimulus.WasSuccessfullySensed());
+		GetBlackboardComponent()->SetValueAsObject("TargetPlayer", Player);
 	}
 }
 

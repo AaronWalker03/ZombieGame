@@ -339,4 +339,6 @@ void AZombieAi::HandleSeePlayer(APawn* Player)
     OnSeePlayer(Player);
     AttackPlayer(Player);
     CurrentState = EZombieState::ZS_Attack;
+
+
 }

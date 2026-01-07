@@ -15,7 +15,7 @@ UBTTask_FindPlayerLocation::UBTTask_FindPlayerLocation(FObjectInitializer const&
 EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	// get player character at index
-	if (ACharacter* const Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))
+	if (ACharacter* const Player = Cast<ACharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(GetSelectedBlackboardKey())))
 	{
 		// get player location
 		FVector const PlayerLocation = Player->GetActorLocation();

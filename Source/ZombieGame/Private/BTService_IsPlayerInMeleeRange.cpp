@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "ZombieGameCharacter.h"
 
 UBTService_IsPlayerInMeleeRange::UBTService_IsPlayerInMeleeRange()
 {
@@ -22,7 +23,7 @@ void UBTService_IsPlayerInMeleeRange::OnBecomeRelevant(UBehaviorTreeComponent& O
 	const AZombieAi* Zombie = Cast<AZombieAi>(Controller->GetPawn());
 
 	// get player character
-	const ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	const AZombieGameCharacter* Player = Cast<AZombieGameCharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(GetSelectedBlackboardKey()));
 
 	// set blackboard key depending on whether or not the player is in melee range
 	OwnerComp.GetBlackboardComponent()->SetValueAsBool(GetSelectedBlackboardKey(), Zombie->GetDistanceTo(Player) <= MeleeRange);

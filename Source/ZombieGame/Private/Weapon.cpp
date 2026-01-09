@@ -32,6 +32,16 @@ void AWeapon::BeginPlay()
 
     CalculateBallistics(powder, grain, diameter);
 
+    int MagCount = 4;
+
+    mags.Empty();
+    for (int i = 0; i < MagCount; ++i)
+    {
+        mags.Add(magCapacity); // fill each mag to capacity
+    }
+
+    currentMagIndex = 0;
+
 }
 
 void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float bulletDiameterMM)
@@ -96,6 +106,19 @@ void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float b
 
 void AWeapon::Shoot()
 {
+    if (mags.Num() == 0 || currentMagIndex >= mags.Num())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No mags available!"));
+        return;
+    }
+
+    if (mags[currentMagIndex] <= 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Current mag is empty! Reload needed."));
+        return;
+    }
+
+
     if (!ammunitionType) return;
     if (!mesh) return;
 
@@ -117,6 +140,9 @@ void AWeapon::Shoot()
         Bullet->velocityms = velocityms;
     }
 
+    mags[currentMagIndex]--;
+    UE_LOG(LogTemp, Warning, TEXT("Fired! %d bullets left in current mag"), mags[currentMagIndex]);
+
     recoilPitch += recoilKick;
     recoilYaw += FMath::RandRange(-recoilShake, recoilShake);
 
@@ -135,7 +161,14 @@ void AWeapon::Shoot()
 
 void AWeapon::Reload()
 {
-    UE_LOG(LogTemp, Warning, TEXT("Base Weapon Reload"));
+    if (currentMagIndex >= mags.Num() - 1)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No more mags left!"));
+        return;
+    }
+
+    currentMagIndex++;
+    UE_LOG(LogTemp, Warning, TEXT("Reloaded to mag %d with %d bullets"), currentMagIndex, mags[currentMagIndex])
 }
 
 // Called every frame

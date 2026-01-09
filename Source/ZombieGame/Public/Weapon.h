@@ -46,6 +46,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	int currentAmmo;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	int magCapacity = 30;
+
+	// List of mags, each entry stores ammo in that mag
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TArray<int> mags;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	int currentMagIndex = 0;
 
 	//get weapon attachments and ajust for recoil
 	//also depending on the bullet used this will affect the recoil
@@ -68,9 +77,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	//use the bp
 	TSubclassOf<AAmmunition> ammunitionType;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	int magCapacity;
 
 	//maybe add time to reload?
 	

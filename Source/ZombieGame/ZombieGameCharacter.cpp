@@ -41,6 +41,10 @@ AZombieGameCharacter::AZombieGameCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+
+	// --- MeshRoot (parent for first-person mesh) ---
+	MeshRoot = CreateDefaultSubobject<USceneComponent>(TEXT("MeshRoot"));
+	MeshRoot->SetupAttachment(GetCapsuleComponent());
 	
 	// Create the first person mesh that will be viewed only by this character's owner
 	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
@@ -59,6 +63,20 @@ AZombieGameCharacter::AZombieGameCharacter()
 	FirstPersonCameraComponent->bEnableFirstPersonScale = true;
 	FirstPersonCameraComponent->FirstPersonFieldOfView = 70.0f;
 	FirstPersonCameraComponent->FirstPersonScale = 0.6f;
+
+	ADSLocation = CreateDefaultSubobject<USceneComponent>(TEXT("ADS Location"));
+	ADSLocation->SetupAttachment(FirstPersonCameraComponent);
+
+	// Adjust this later per-weapon
+	ADSLocation->SetRelativeLocation(FVector(30.f, 0.f, -10.f));
+	ADSLocation->SetRelativeRotation(FRotator::ZeroRotator);
+
+	GunRoot = CreateDefaultSubobject<USceneComponent>(TEXT("GunRoot"));
+	GunRoot->SetupAttachment(FirstPersonMesh); // attach to mesh, matches gun socket
+	GunRoot->SetRelativeLocation(FVector::ZeroVector);
+	GunRoot->SetRelativeRotation(FRotator::ZeroRotator);
+
+	DefaultGunRelativeLocation = GunRoot->GetRelativeLocation();
 
 	// configure the character comps
 	GetMesh()->SetOwnerNoSee(true);
@@ -97,11 +115,19 @@ AZombieGameCharacter::AZombieGameCharacter()
 	bReplicates = true;
 
 	SetupStimulusSource();
+
+	DefaultMeshRelativeLocation = FirstPersonMesh->GetRelativeLocation(); 
+	ADSInterpSpeed = 10.f; 
 }
 
 void AZombieGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (FirstPersonMesh)
+	{
+		DefaultMeshRelativeLocation = FirstPersonMesh->GetRelativeLocation();
+	}
 
 	if (IsLocallyControlled())
 	{
@@ -115,6 +141,7 @@ void AZombieGameCharacter::BeginPlay()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, XPMessage);
 
 	SpawnWeapon();
+	OnConstruction();
 }
 
 void AZombieGameCharacter::Tick(float DeltaTime)
@@ -125,18 +152,23 @@ void AZombieGameCharacter::Tick(float DeltaTime)
 	if (EquippedWeapon)
 	{
 		
-		// Get current relative transform
-		FTransform Current = EquippedWeapon->mesh->GetRelativeTransform();
+		if (bIsAiming)
+		{
+			// Gun target position = ADSLocation relative to mesh
+			FVector ADSRelativeLocation = FirstPersonMesh->GetComponentTransform().InverseTransformPosition(
+				ADSLocation->GetComponentLocation()
+			);
 
-		// Decide target transform
-		FTransform Target = bIsAiming ? TargetADSTransform : DefaultWeaponTransform;
-
-		// Smoothly interpolate to target
-		FTransform NewTransform;
-		NewTransform.Blend(Current, Target, DeltaTime * ADSInterpSpeed);
-
-		EquippedWeapon->mesh->SetRelativeTransform(NewTransform);
-		
+			// Smoothly move the GunRoot
+			FVector NewLocation = FMath::VInterpTo(GunRoot->GetRelativeLocation(), ADSRelativeLocation, DeltaTime, ADSInterpSpeed);
+			GunRoot->SetRelativeLocation(NewLocation);
+		}
+		else
+		{
+			// Return gun to default position
+			FVector NewLocation = FMath::VInterpTo(GunRoot->GetRelativeLocation(), DefaultGunRelativeLocation, DeltaTime, ADSInterpSpeed);
+			GunRoot->SetRelativeLocation(NewLocation);
+		}
 
 
 		float pitchStep = EquippedWeapon->recoilPitch * DeltaTime * 20.0f;
@@ -365,7 +397,7 @@ void AZombieGameCharacter::SpawnWeapon()
 		if (MyWeapon && FirstPersonMesh)
 		{
 			MyWeapon->AttachToComponent(
-				FirstPersonMesh,
+				GunRoot,
 				FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 				FName("HandGrip_R")
 			);
@@ -439,7 +471,7 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::LookInput);
 
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::StartAim);
-		//EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopAim);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopAim);
 
 		EnhancedInputComponent->BindAction(simpleReload, ETriggerEvent::Started, this, &AZombieGameCharacter::SimpleReload);
 		EnhancedInputComponent->BindAction(speedReload, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SpeedReload);
@@ -475,7 +507,6 @@ void AZombieGameCharacter::OnFire()
 void AZombieGameCharacter::StartAim()
 {
 	bIsAiming = true;
-	UpdateADSTransform();
 }
 
 //hold breathe maybe?
@@ -485,34 +516,37 @@ void AZombieGameCharacter::StopAim()
 	bIsAiming = false;
 }
 
-void AZombieGameCharacter::UpdateADSTransform()
+void AZombieGameCharacter::OnConstruction()
 {
-	if (!EquippedWeapon || !FirstPersonCameraComponent) return;
+	const FTransform CameraWorldTransform =
+		FirstPersonCameraComponent->GetComponentTransform();
 
-	USkeletalMeshComponent* WeaponMesh = EquippedWeapon->mesh;
+	const FVector SocketWorldLocation =
+		EquippedWeapon->mesh->GetSocketLocation(TEXT("SightSocket"));
 
-	// Location of the weapon's "adsSocket" in world space
-	FVector SocketWorld = WeaponMesh->GetSocketLocation("adsSocket");
+	const FVector LocalResult =
+		CameraWorldTransform.InverseTransformPosition(SocketWorldLocation);
 
-	// Camera location and forward vector
-	FVector CameraLocation = FirstPersonCameraComponent->GetComponentLocation();
-	FVector CameraForward = FirstPersonCameraComponent->GetForwardVector();
+	const FVector FixedVector(
+		LocalResult.X * -1.f,
+		LocalResult.Y,
+		LocalResult.Z * -1.f
+	);
 
-	// Desired distance in front of camera for ADS
-	float DesiredDistance = 50.f; // tweak this to match how close the weapon should be
-	FVector DesiredWorldPos = CameraLocation + CameraForward * DesiredDistance;
+	ADSOutputX = FixedVector.X;
+	ADSOutputY = FixedVector.Y;
+	ADSOutputZ = FixedVector.Z;
 
-	// Calculate the offset from the weapon's socket to the desired position
-	FVector LocalOffset = WeaponMesh->GetComponentTransform().InverseTransformVector(DesiredWorldPos - SocketWorld);
-
-	// Apply offset to the default weapon transform
-	TargetADSTransform = DefaultWeaponTransform;
-	TargetADSTransform.AddToTranslation(LocalOffset);
+	UE_LOG(LogTemp, Warning, TEXT("ADS OFFSET => X: %.3f | Y: %.3f | Z: %.3f"),
+		ADSOutputX, ADSOutputY, ADSOutputZ);
 }
+
+
 
 void AZombieGameCharacter::SimpleReload()
 {
 	bIsReloading = true;
+	EquippedWeapon->Reload();
 	//keep mag so more ammo can be put into it later
 	
 }

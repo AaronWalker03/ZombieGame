@@ -40,6 +40,14 @@ class AZombieGameCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
+	// ADS location for aiming down sights
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	USceneComponent* ADSLocation;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* MeshRoot;
+
+
 protected:
 
 	//
@@ -138,10 +146,33 @@ public:
 	bool bIsAiming = false;
 	bool bIsReloading = false;
 
-	FTransform DefaultWeaponTransform;
-	FTransform TargetADSTransform;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ADS")
+	float ADSOutputX;
 
-	float ADSInterpSpeed = 15.f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ADS")
+	float ADSOutputY;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ADS")
+	float ADSOutputZ;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ADS")
+	float ADSInterpSpeed = 10.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ADS")
+	FVector ADSOffset;
+
+	// Default relative location of the arms mesh (used for returning from ADS)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ADS")
+	FVector DefaultMeshRelativeLocation = FVector::ZeroVector;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ADS")
+	USceneComponent* GunRoot;
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ADS")
+	FVector DefaultGunRelativeLocation;
+
+	FTransform DefaultWeaponTransform;
 
 	//change this to a list, so can have specific ammo per mag
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mag Count")
@@ -205,7 +236,7 @@ protected:
 	void SpeedReload();
 	void MagCheck();
 
-	void UpdateADSTransform();
+	void OnConstruction();
 	
 	
 	//should probably change this to weapon specific animation

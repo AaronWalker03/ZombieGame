@@ -7,7 +7,9 @@
 #include "Logging/LogMacros.h"
 #include "Public/Weapon.h"
 #include "PlayerCustomisationStruct.h"
+#include <GameFramework/SpringArmComponent.h>
 #include "ZombieGameCharacter.generated.h"
+
 
 
 class UInputComponent;
@@ -33,19 +35,12 @@ class AZombieGameCharacter : public ACharacter
 	GENERATED_BODY()
 
 	/** Pawn mesh: first person view (arms; seen only by self) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* FirstPersonMesh;
 
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
-
-	// ADS location for aiming down sights
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	USceneComponent* ADSLocation;
-
-	UPROPERTY(VisibleAnywhere)
-	USceneComponent* MeshRoot;
 
 
 protected:
@@ -113,6 +108,22 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
 	class UInputAction* MouseLookAction;
 
+	/** Handles aim inputs from either controls or UI interfaces */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoAim(float Yaw, float Pitch);
+
+	/** Handles move inputs from either controls or UI interfaces */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoMove(float Right, float Forward);
+
+	/** Handles jump start inputs from either controls or UI interfaces */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoJumpStart();
+
+	/** Handles jump end inputs from either controls or UI interfaces */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoJumpEnd();
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	AWeapon* EquippedWeapon;
 
@@ -146,33 +157,18 @@ public:
 	bool bIsAiming = false;
 	bool bIsReloading = false;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ADS")
-	float ADSOutputX;
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* FP_Root;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ADS")
-	float ADSOutputY;
+	UPROPERTY(VisibleAnywhere)
+	USpringArmComponent* MeshRoot;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ADS")
-	float ADSOutputZ;
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* Offset_Root;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ADS")
-	float ADSInterpSpeed = 10.f;
+	UPROPERTY(VisibleAnywhere)
+	USpringArmComponent* Cam_Root;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ADS")
-	FVector ADSOffset;
-
-	// Default relative location of the arms mesh (used for returning from ADS)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ADS")
-	FVector DefaultMeshRelativeLocation = FVector::ZeroVector;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ADS")
-	USceneComponent* GunRoot;
-
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ADS")
-	FVector DefaultGunRelativeLocation;
-
-	FTransform DefaultWeaponTransform;
 
 	//change this to a list, so can have specific ammo per mag
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mag Count")
@@ -199,9 +195,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ChangeWeapon(TSubclassOf<AWeapon> NewWeaponClass);
-
-	/** Property replication */
-	//void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/** Getter for Max Health.*/
 	UFUNCTION(BlueprintPure, Category = "Health")
@@ -236,43 +229,13 @@ protected:
 	void SpeedReload();
 	void MagCheck();
 
-	void OnConstruction();
-	
-	
-	//should probably change this to weapon specific animation
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Animations")
-	UAnimMontage* regularReloadMontage;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Animations")
-	UAnimMontage* speedReloadMontage;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Animations")
-	UAnimMontage* magCheckMontage;
-
-
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TSubclassOf<AWeapon> DefaultWeaponClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimSequence* EquipSequence;
 
-	/** Handles aim inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoAim(float Yaw, float Pitch);
 
-	/** Handles move inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoMove(float Right, float Forward);
-
-	/** Handles jump start inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoJumpStart();
-
-	/** Handles jump end inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoJumpEnd();
 
 	/** RepNotify for changes made to current health.*/
 	UFUNCTION()
@@ -288,28 +251,6 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Projectile")
 	TSubclassOf<class AZombieGameProjectile> ProjectileClass;
-
-	/** Delay between shots in seconds. Used to control fire rate for your test projectile, but also to prevent an overflow of server functions from binding SpawnProjectile directly to input.*/
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
-	float FireRate;
-
-	/** If true, you are in the process of firing projectiles. */
-	bool bIsFiringWeapon;
-
-	/** Function for beginning weapon fire.*/
-	//UFUNCTION(BlueprintCallable, Category = "Gameplay")
-	//void StartFire();
-
-	///** Function for ending weapon fire. Once this is called, the player can use StartFire again.*/
-	//UFUNCTION(BlueprintCallable, Category = "Gameplay")
-	//void StopFire();
-
-	///** Server function for spawning projectiles.*/
-	//UFUNCTION(Server, Reliable)
-	//void HandleFire();
-
-	/** A timer handle used for providing the fire rate delay in-between spawns.*/
-	FTimerHandle FiringTimer;
 
 public:
 

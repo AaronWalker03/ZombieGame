@@ -47,15 +47,18 @@ struct FLimbData
 	float CurrentHealth;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bBleeding;
+	bool bDisconnected;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BleedSeverity;
 
 	FLimbData()
-		: MaxHealth(100.f), CurrentHealth(100.f), bBleeding(false)
+		: MaxHealth(100.f), CurrentHealth(100.f), bDisconnected(false), BleedSeverity(1.0f)
 	{
 	}
 
-	FLimbData(float InHealth)
-		: MaxHealth(InHealth), CurrentHealth(InHealth), bBleeding(false)
+	FLimbData(float InHealth, float bleedSeverity)
+		: MaxHealth(InHealth), CurrentHealth(InHealth), bDisconnected(false), BleedSeverity(bleedSeverity)
 	{
 	}
 };
@@ -121,20 +124,23 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
 	UStaticMeshComponent* RFoot;
 
-	 UPROPERTY(EditDefaultsOnly, Category="Effects")
+	UPROPERTY(EditDefaultsOnly, Category="Effects")
     UParticleSystem* BloodFX;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
 	float damage;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
-	float health;
+	float MaxHealth;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
+	float CurrentHealth;
 
 	UPROPERTY(EditAnywhere, Category = "Zombie Stats")
 	TMap<FName, FLimbData> LimbHealthMap;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
-	float bloodAmount; //in litres?
+	float bloodQuantity; //in litres
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
 	float movementSpeed;
@@ -175,6 +181,25 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Zombie")
 	void OnSeePlayer(APawn* Player);
+
+	UFUNCTION()
+	void ApplyBleed(float bleedSeverity);
+
+private:
+	UFUNCTION()
+	void KillZombie();
+
+	UPROPERTY()
+	FTimerHandle TimerHandle;
+
+	UFUNCTION()
+	void DestroyZombie();
+
+	UFUNCTION()
+	void SetCurrentHealth(float health);
+
+	UFUNCTION()
+	float GetCurrentHealth();
 
 public:	
 	// Called every frame

@@ -19,7 +19,13 @@ AZombieAi::AZombieAi()
 
     pawnSensingComp = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComp"));
 
-    health = 100.0f;
+    MaxHealth = 100.0f;
+
+    CurrentHealth = MaxHealth;
+
+    bloodQuantity = 5.0f; // 5 Litres is the average amount in a human
+
+    damage = 10.f;
 
     CurrentState = EZombieState::ZS_Idle;
 
@@ -111,26 +117,26 @@ void AZombieAi::SetBodyparts()
     RFoot->SetStaticMesh(CubeAsset.Object);
     RFoot->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
 
-    LimbHealthMap.Add("Head", FLimbData(35.f));
+    LimbHealthMap.Add("Head", FLimbData(35.f, 1.5f));
 
     // Arms: low importance
-    LimbHealthMap.Add("LUpArm", FLimbData(15.f));
-    LimbHealthMap.Add("LForearm", FLimbData(10.f));
-    LimbHealthMap.Add("LHand", FLimbData(5.f));
-    LimbHealthMap.Add("RUpArm", FLimbData(15.f));
-    LimbHealthMap.Add("RForearm", FLimbData(10.f));
-    LimbHealthMap.Add("RHand", FLimbData(5.f));
+    LimbHealthMap.Add("LUpArm", FLimbData(15.f, 0.5f)); // First Number Health, Second how fast the zombie will bleed out from losing that appendage
+    LimbHealthMap.Add("LForearm", FLimbData(10.f, 0.1f));
+    LimbHealthMap.Add("LHand", FLimbData(5.f, 0.01f));
+    LimbHealthMap.Add("RUpArm", FLimbData(15.f, 0.5f));
+    LimbHealthMap.Add("RForearm", FLimbData(10.f, 0.1f));
+    LimbHealthMap.Add("RHand", FLimbData(5.f, 0.01f));
 
     // Legs: mid-range, can bleed out but not instant kill
-    LimbHealthMap.Add("LThigh", FLimbData(25.f));
-    LimbHealthMap.Add("LCalf", FLimbData(20.f));
-    LimbHealthMap.Add("LFoot", FLimbData(10.f));
-    LimbHealthMap.Add("RThigh", FLimbData(25.f));
-    LimbHealthMap.Add("RCalf", FLimbData(20.f));
-    LimbHealthMap.Add("RFoot", FLimbData(10.f));
+    LimbHealthMap.Add("LThigh", FLimbData(25.f, 1.0f));
+    LimbHealthMap.Add("LCalf", FLimbData(20.f, 0.2f));
+    LimbHealthMap.Add("LFoot", FLimbData(10.f, 0.1f));
+    LimbHealthMap.Add("RThigh", FLimbData(25.f, 1.0f));
+    LimbHealthMap.Add("RCalf", FLimbData(20.f, 0.2f));
+    LimbHealthMap.Add("RFoot", FLimbData(10.f, 0.1f));
 
     // Torso or spine can be main kill zone if you want
-    LimbHealthMap.Add("Torso", FLimbData(60.f));
+    LimbHealthMap.Add("Torso", FLimbData(60.f, 0.3f));
 }
 
 void AZombieAi::BeginPlay()
@@ -141,8 +147,6 @@ void AZombieAi::BeginPlay()
     pawnSensingComp->bSeePawns = true;
 
     // Default stats
-    health = 100.f;
-    damage = 10.f;
     movementSpeed = 150.f;
     visionDetectionAngle = 50.0f;
     visionDetectionRange = 1200.0f;
@@ -183,6 +187,20 @@ void AZombieAi::ApplyLimbDamage(UPrimitiveComponent* HitComp, float Damage)
         if (Limb.CurrentHealth <= Damage)
         {
             DismemberLimb(HitComp);
+
+            FTimerDelegate BleedDelegate;
+            BleedDelegate.BindUFunction(
+                this,
+                FName("ApplyBleed"),
+                Limb.BleedSeverity
+            );
+
+            GetWorld()->GetTimerManager().SetTimer(
+                TimerHandle,
+                BleedDelegate,
+                20.0f,
+                true
+            );
 
             //uncomment this once we've decided the XP shite
            /* AZombieGameCharacter* PlayerChar = Cast<AZombieGameCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
@@ -227,7 +245,6 @@ void AZombieAi::DismemberLimb(UPrimitiveComponent* HitComp)
         LimbComp->SetSimulatePhysics(true);
         LimbComp->AddImpulse(FVector(0.f, 0.f, 200.f), NAME_None, true);
 
-
         //could be cool for the blood fx at first it spurts out loads then over time goes down as less blood in body
 
        /* if (BloodFX)
@@ -241,7 +258,7 @@ void AZombieAi::DismemberLimb(UPrimitiveComponent* HitComp)
     else
     {
         UE_LOG(LogTemp, Warning, TEXT("DismemberLimb: Could not find component named %s"), *LimbName.ToString());
-    } 
+    }
 }
 
 UBehaviorTree* AZombieAi::GetBehaviourTree() const
@@ -252,6 +269,61 @@ UBehaviorTree* AZombieAi::GetBehaviourTree() const
 int AZombieAi::MeleeAttack_Implementation()
 {
     return 0;
+}
+
+void AZombieAi::KillZombie()
+{
+    TArray<UActorComponent*> Components;
+    GetComponents(UStaticMeshComponent::StaticClass(), Components);
+
+    for (UActorComponent* C : Components)
+    {
+        if (C)
+        {
+            UStaticMeshComponent* LimbComp = Cast<UStaticMeshComponent>(C);
+
+            if (!LimbComp->IsSimulatingPhysics())
+            {
+                LimbComp->SetSimulatePhysics(true);
+            }
+        }
+    }
+
+    UBehaviorTree* tree = GetBehaviourTree();
+    tree->FinishDestroy();
+
+    // After next round, Destroy actor and components if we want to allow the bodies to pile up. Or just set a timer to Call Destroy actor
+
+    /*GetWorld()->GetTimerManager().SetTimer(
+        TimerHandle,
+        this,
+        &AZombieAi::DestroyZombie,
+        10.0f,
+        false
+    );*/
+}
+
+void AZombieAi::DestroyZombie()
+{
+    Destroy();
+}
+
+void AZombieAi::ApplyBleed(float bleedSeverity)
+{
+    if (bloodQuantity >= 0)
+    {
+        bloodQuantity -= bleedSeverity;
+    }
+}
+
+void AZombieAi::SetCurrentHealth(float health)
+{
+    CurrentHealth = health;
+}
+
+float AZombieAi::GetCurrentHealth()
+{
+    return CurrentHealth;
 }
 
 // Called every frame
@@ -319,6 +391,12 @@ void AZombieAi::Tick(float DeltaTime)
         );
     }
 
+    if (CurrentHealth || bloodQuantity <= 0.0f)
+    {
+        KillZombie();
+    }
+
+    // May need to add in a check here for if the zombie has both legs blown off for changing movement state to crawling or something along those lines
 }
 
 void AZombieAi::AttackPlayer(APawn* Player)

@@ -55,13 +55,6 @@ AZombieGameCharacter::AZombieGameCharacter()
 	Offset_Root = CreateDefaultSubobject<USceneComponent>(TEXT("Offset_Root"));
 	Offset_Root->SetupAttachment(MeshRoot);
 
-	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
-	FirstPersonMesh->SetupAttachment(Offset_Root);
-	FirstPersonMesh->SetCollisionProfileName(TEXT("NoCollision"));
-	FirstPersonMesh->bCastDynamicShadow = false;
-	FirstPersonMesh->CastShadow = false;
-	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
-
 	Cam_Root = CreateDefaultSubobject<USpringArmComponent>(TEXT("Cam_Root"));
 	Cam_Root->SetupAttachment(FP_Root);
 	Cam_Root->TargetArmLength = 0.f;
@@ -78,7 +71,7 @@ AZombieGameCharacter::AZombieGameCharacter()
 	FirstPersonCameraComponent->FirstPersonFieldOfView = 90.0f;
 	FirstPersonCameraComponent->FirstPersonScale = 0.6f;
 
-	GetMesh()->SetupAttachment(FP_Root);
+	//GetMesh()->SetupAttachment(FP_Root);
 	GetMesh()->SetOwnerNoSee(true);
 	GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
 
@@ -355,7 +348,7 @@ void AZombieGameCharacter::SpawnWeapon()
 			SpawnParams
 		);
 
-		if (MyWeapon && FirstPersonMesh)
+	/*	if (MyWeapon && FirstPersonMesh)
 		{
 			MyWeapon->AttachToComponent(
 				FirstPersonMesh,
@@ -364,7 +357,7 @@ void AZombieGameCharacter::SpawnWeapon()
 			);
 
 			EquippedWeapon = MyWeapon;
-		}
+		}*/
 	}
 }
 
@@ -460,7 +453,7 @@ void AZombieGameCharacter::SetupStimulusSource()
 
 void AZombieGameCharacter::OnFire()
 {
-	EquippedWeapon->Shoot();
+	//EquippedWeapon->Shoot();
 }
 
 void AZombieGameCharacter::StartAim()
@@ -476,7 +469,7 @@ void AZombieGameCharacter::StopAim()
 void AZombieGameCharacter::SimpleReload()
 {
 	bIsReloading = true;
-	EquippedWeapon->Reload();
+	//EquippedWeapon->Reload();
 	//keep mag so more ammo can be put into it later
 	
 }

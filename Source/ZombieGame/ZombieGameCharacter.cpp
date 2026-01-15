@@ -514,6 +514,7 @@ void AZombieGameCharacter::MoveInput(const FInputActionValue& Value)
 	// pass the axis values to the move input
 	DoMove(MovementVector.X, MovementVector.Y);
 
+	ShouldStopSprint(MovementVector.Y);
 }
 
 void AZombieGameCharacter::LookInput(const FInputActionValue& Value)

@@ -153,17 +153,20 @@ public:
 	bool bIsAiming = false;
 	bool bIsReloading = false;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(BlueprintReadWrite)
 	USceneComponent* FP_Root;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(BlueprintReadWrite)
 	USpringArmComponent* MeshRoot;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(BlueprintReadWrite)
 	USceneComponent* Offset_Root;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(BlueprintReadWrite)
 	USpringArmComponent* Cam_Root;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sprint")
+	void ShouldStopSprint(float VelocityAxis);
 
 
 	//change this to a list, so can have specific ammo per mag

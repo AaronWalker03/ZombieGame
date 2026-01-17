@@ -217,8 +217,6 @@ void AZombieGameCharacter::Server_SendCustomisation_Implementation(const FPlayer
 
 void AZombieGameCharacter::OnRep_Customisation()
 {
-	//change this so that it applies the other players stuff on client side on THEIR character
-	//curently does it for the client
 	ApplyCustomisation(PlayerCustomisation);
 }
 
@@ -453,7 +451,6 @@ void AZombieGameCharacter::SetupStimulusSource()
 	}
 }
 
-//WEAPON ACTIONS
 void AZombieGameCharacter::OnFire()
 {
 	//EquippedWeapon->Shoot();
@@ -493,8 +490,6 @@ void AZombieGameCharacter::MagCheck()
 	
 }
 
-
-//HEALTH
 void AZombieGameCharacter::SetCurrentHealth(float healthValue)
 {
 	if (GetLocalRole() == ROLE_Authority)
@@ -510,15 +505,6 @@ float AZombieGameCharacter::TakeDamage(float DamageTaken, FDamageEvent const& Da
 	SetCurrentHealth(damageApplied);
 	return damageApplied;
 }
-
-void AZombieGameCharacter::OnRep_CurrentHealth()
-{
-	OnHealthUpdate();
-}
-
-
-
-//MOVEMENT
 
 void AZombieGameCharacter::MoveInput(const FInputActionValue& Value)
 {
@@ -574,3 +560,7 @@ void AZombieGameCharacter::DoJumpEnd()
 	StopJumping();
 }
 
+void AZombieGameCharacter::OnRep_CurrentHealth()
+{
+	OnHealthUpdate();
+}

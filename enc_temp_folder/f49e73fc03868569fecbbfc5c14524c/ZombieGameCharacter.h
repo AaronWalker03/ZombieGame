@@ -81,11 +81,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* magCheck;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	UInputAction* sprintAction;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	UInputAction* crouchAction;
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")

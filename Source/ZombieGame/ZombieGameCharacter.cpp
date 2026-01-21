@@ -104,6 +104,8 @@ void AZombieGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	USkeletalMeshComponent* FirstPersonMesh = FindComponentByClass<USkeletalMeshComponent>();
+
 	if (IsLocallyControlled())
 	{
 		LoadCustomisationFromSave();
@@ -116,12 +118,17 @@ void AZombieGameCharacter::BeginPlay()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, XPMessage);
 
 	SpawnWeapon();
+
+	FVector weaponADSOffset = EquippedWeapon->weaponADSOffset;
 }
 
 void AZombieGameCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	UpdateWalkAnimation(DeltaTime);
+	HandleFootsteps(DeltaTime);
+	UpdateMovementSpeed(DeltaTime);
 
 	if (EquippedWeapon)
 	{
@@ -519,6 +526,76 @@ void AZombieGameCharacter::OnRep_CurrentHealth()
 
 
 //MOVEMENT
+void AZombieGameCharacter::UpdateMovementSpeed(float DeltaTime)
+{
+	float TargetSpeed = bIsSprinting ? SprintSpeed : BaseWalkSpeed;
+
+	float CurrentSpeed = GetCharacterMovement()->MaxWalkSpeed;
+
+	GetCharacterMovement()->MaxWalkSpeed =
+		FMath::FInterpTo(CurrentSpeed, TargetSpeed, DeltaTime, SpeedInterpRate);
+}
+
+
+void AZombieGameCharacter::StartSprint()
+{
+	bIsSprinting = true;
+}
+
+void AZombieGameCharacter::StopSprint()
+{
+	bIsSprinting = false;
+}
+
+
+void AZombieGameCharacter::HandleFootsteps(float DeltaTime)
+{
+	if (GetVelocity().Size2D() < 10.f) return;
+
+	FootstepTimer += DeltaTime;
+
+	if (FootstepTimer >= FootstepInterval)
+	{
+		FootstepTimer = 0.f;
+
+		float Pitch = bIsSprinting ? 1.0f : 0.8f;
+		float Volume = bIsSprinting ? 1.0f : 0.2f;
+
+		/*UGameplayStatics::PlaySoundAtLocation(
+			this,
+			FootstepSound,
+			GetActorLocation(),
+			Volume,
+			Pitch
+		);*/
+	}
+}
+
+
+void AZombieGameCharacter::UpdateWalkAnimation(float DeltaTime)
+{
+	float Speed = GetVelocity().Size2D();
+	bool bIsMoving = Speed > 10.f;
+
+	// Smooth alpha (optional, only if needed for blending)
+	float TargetAlpha = bIsMoving ? 1.f : 0.f;
+	WalkAnimAlpha = FMath::FInterpTo(WalkAnimAlpha, TargetAlpha, DeltaTime, 8.f);
+
+	// Offsets
+	FVector TargetOffset = bIsMoving
+		? FVector(0.3f, 0.f, -0.7f)
+		: FVector::ZeroVector;
+
+	WalkOffset = FMath::VInterpTo(WalkOffset, TargetOffset, DeltaTime, 6.f);
+
+	// Rotation
+	FRotator TargetRotation = bIsMoving
+		? FRotator(1.55f, 0.f, 0.f)
+		: FRotator::ZeroRotator;
+
+	WalkRotation = FMath::RInterpTo(WalkRotation, TargetRotation, DeltaTime, 6.f);
+}
+
 
 void AZombieGameCharacter::MoveInput(const FInputActionValue& Value)
 {

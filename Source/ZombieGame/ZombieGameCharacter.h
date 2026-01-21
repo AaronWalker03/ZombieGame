@@ -29,6 +29,12 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 //need to make a behaviour tree for animations
 //also need to sort out which mesh is seen by the player and which is being sent to server (for others)
 
+
+//need to get ref to fps mesh
+//need to make it so that can have multiple weapons
+//make it so that player can pick up weapons
+//rework weapon bp to work with new ads system
+
 UCLASS(abstract)
 class AZombieGameCharacter : public ACharacter
 {
@@ -71,6 +77,8 @@ protected:
 	void LoadCustomisationFromSave();
 
 
+	UPROPERTY(EditDefaultsOnly, Category = "ADS")
+	FVector weaponADSOffset;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* simpleReload;
@@ -82,7 +90,7 @@ protected:
 	UInputAction* magCheck;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	UInputAction* sprintAction;
+	UInputAction* sprintingAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* crouchAction;
@@ -178,6 +186,35 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mag Count")
 	int magCount = 4;
 
+	// Movement tuning
+	float BaseWalkSpeed = 450.f;
+
+	// Animation
+	float WalkAnimAlpha = 0.f;
+	FVector WalkOffset = FVector::ZeroVector;
+	FRotator WalkRotation = FRotator::ZeroRotator;
+
+	// Footsteps
+	float FootstepTimer = 0.f;
+	float FootstepInterval = 0.45f;
+
+	//UPROPERTY(BlueprintReadOnly)
+	//float LeanAmount;
+
+	//UPROPERTY(BlueprintReadOnly)
+	//FRotator LeanRotation;
+
+	//float MaxLeanAngle = 10.f;   // degrees
+	//float LeanInterpSpeed = 8.f;
+
+
+	// State
+	bool bIsSprinting = false;
+
+	float SprintSpeed = 650.f;
+	float SpeedInterpRate = 8.f;
+
+
 	//call save file and get meshes saved
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Clothes Meshes")
@@ -223,6 +260,12 @@ protected:
 
 	/** Called from Input Actions for looking input */
 	void LookInput(const FInputActionValue& Value);
+
+	void UpdateWalkAnimation(float DeltaTime);
+	void HandleFootsteps(float DeltaTime);
+	void StartSprint();
+	void StopSprint();
+	void UpdateMovementSpeed(float DeltaTime);
 
 	void OnFire();
 	

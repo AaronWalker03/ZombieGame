@@ -19,12 +19,19 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere, Category = "Spawning")
-	int aliveZombies = 0;
+	const int HordeCap = 24;	// limit of zombies that can be on the map at any one time
 
-	int zombiesToSpawn = 0;
+	const int BaseNumOfZombies = 6;
 
-	int roundNum = 0;
+	const int LinearRoundIncrease = 3;
+
+	const float QuadraticRoundIncrease = 0.25f;
+
+	int AliveZombies;
+
+	int NumToSpawn;
+
+	int RoundNum;
 
 	void SpawnZombie();
 	void StartNewRound();
@@ -36,7 +43,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	TArray<AActor*> SpawnPoints;
 
-	int spawnIndex = 0;
+	int spawnIndex;
 
 public:	
 	// Called every frame

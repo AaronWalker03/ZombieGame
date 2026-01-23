@@ -124,8 +124,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
 	UStaticMeshComponent* RFoot;
 
-	UPROPERTY(EditDefaultsOnly, Category="Effects")
-    UParticleSystem* BloodFX;
+	UPROPERTY(EditAnywhere, Category="VFX")
+	UNiagaraSystem* BloodFX;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
 	float damage;

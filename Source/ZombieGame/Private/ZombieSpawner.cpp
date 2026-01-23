@@ -4,23 +4,21 @@
 #include "ZombieSpawner.h"
 #include "ZombieAi.h"
 
-
-
-
 //implement zombies dying so rounds actually change
 
 AZombieSpawner::AZombieSpawner()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+    AliveZombies = 0;
+    NumToSpawn = 6;
+    RoundNum = 1;
 }
 
 void AZombieSpawner::BeginPlay()
 {
 	Super::BeginPlay();
 	
-    roundNum = 1;
-
-    zombiesToSpawn = 15;
 }
 
 // Called every frame
@@ -33,28 +31,32 @@ void AZombieSpawner::Tick(float DeltaTime)
 
 void AZombieSpawner::RoundManager()
 {
-    if (zombiesToSpawn > 0)
+    if (NumToSpawn && AliveZombies == 0)
     {
-        SpawnZombie();
-        zombiesToSpawn--;
-        aliveZombies++;
+        StartNewRound();
         return;
     }
 
-    if (aliveZombies == 0)
+    if (NumToSpawn > 0)
     {
-        StartNewRound();
+        if (AliveZombies < HordeCap)
+        {
+            SpawnZombie();
+        }
     }
 }
 
 void AZombieSpawner::StartNewRound()
 {
-    roundNum++;
+    RoundNum++;
 
-    zombiesToSpawn = 5 + (roundNum - 1) * 2;
+    NumToSpawn = BaseNumOfZombies + (RoundNum * LinearRoundIncrease) + (RoundNum * RoundNum * QuadraticRoundIncrease);
+
+    // clear any dead bodies at this point?
+    // idk if we want to go full cod zombies and have powerups - then reset AllowedNumberOfDropsThatCanSpawn
 
     UE_LOG(LogTemp, Warning, TEXT("Starting round %d with %d zombies"),
-        roundNum, zombiesToSpawn);
+        RoundNum, NumToSpawn);
 }
 
 void AZombieSpawner::SpawnZombie()
@@ -63,8 +65,7 @@ void AZombieSpawner::SpawnZombie()
 
     FVector Location = SpawnPoint->GetActorLocation();
 
-   
-    Location.Z += 100.f;  
+    Location.Z += 100.f;
 
     FRotator Rotation = SpawnPoint->GetActorRotation();
 
@@ -74,5 +75,6 @@ void AZombieSpawner::SpawnZombie()
     // Spawn zombie
     GetWorld()->SpawnActor<AZombieAi>(ZombieClass, Location, Rotation, SpawnParams);
 
-    spawnIndex++;
+    AliveZombies++;
+    NumToSpawn--;
 }

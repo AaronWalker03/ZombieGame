@@ -104,13 +104,10 @@ void AZombieGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	USkeletalMeshComponent* FirstPersonMesh = FindComponentByClass<USkeletalMeshComponent>();
-
-	if (IsLocallyControlled())
-	{
-		LoadCustomisationFromSave();
-		Server_SendCustomisation(PlayerCustomisation);
-	}
+	//can probably get changed and hierarchy reset?
+	FirstPersonMesh = Cast<USkeletalMeshComponent>(
+		GetDefaultSubobjectByName(TEXT("FirstPersonMesh"))
+	);
 
 	LoadCustomisation();
 
@@ -119,7 +116,7 @@ void AZombieGameCharacter::BeginPlay()
 
 	SpawnWeapon();
 
-	FVector weaponADSOffset = EquippedWeapon->weaponADSOffset;
+	ADSOffset = EquippedWeapon->weaponADSOffset;
 }
 
 void AZombieGameCharacter::Tick(float DeltaTime)
@@ -129,9 +126,13 @@ void AZombieGameCharacter::Tick(float DeltaTime)
 	UpdateWalkAnimation(DeltaTime);
 	HandleFootsteps(DeltaTime);
 	UpdateMovementSpeed(DeltaTime);
+	UpdateADS(DeltaTime);
 
 	if (EquippedWeapon)
 	{
+
+		//recoil dont work because of hierarchy?
+
 		float pitchStep = EquippedWeapon->recoilPitch * DeltaTime * 20.0f;
 		float yawStep = EquippedWeapon->recoilYaw * DeltaTime * 20.0f;
 
@@ -357,16 +358,16 @@ void AZombieGameCharacter::SpawnWeapon()
 			SpawnParams
 		);
 
-	/*	if (MyWeapon && FirstPersonMesh)
+		if (MyWeapon && FirstPersonMesh)
 		{
 			MyWeapon->AttachToComponent(
 				FirstPersonMesh,
 				FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-				FName("HandGrip_R")
+				FName("WeaponSocket")
 			);
 
 			EquippedWeapon = MyWeapon;
-		}*/
+		}
 	}
 }
 
@@ -438,6 +439,8 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(speedReload, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SpeedReload);
 		EnhancedInputComponent->BindAction(magCheck, ETriggerEvent::Completed, this, &AZombieGameCharacter::MagCheck);
 
+		//EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::OnFire);
+
 	}
 	else
 	{
@@ -463,7 +466,7 @@ void AZombieGameCharacter::SetupStimulusSource()
 //WEAPON ACTIONS
 void AZombieGameCharacter::OnFire()
 {
-	//EquippedWeapon->Shoot();
+	EquippedWeapon->Shoot();
 }
 
 void AZombieGameCharacter::StartAim()
@@ -475,6 +478,24 @@ void AZombieGameCharacter::StopAim()
 {
 	bIsAiming = false;
 }
+
+void AZombieGameCharacter::UpdateADS(float DeltaTime)
+{
+	const float TargetAlpha = bIsAiming ? 1.0f : 0.0f;
+
+	// Smoothly move alpha toward target
+	ADSAlpha = FMath::FInterpTo(ADSAlpha, TargetAlpha, DeltaTime, ADSInterpSpeed);
+
+	// Lerp FOV
+	const float NewFOV = FMath::Lerp(HipFOV, ADSFOV, ADSAlpha);
+	FirstPersonCameraComponent->SetFieldOfView(NewFOV);
+
+	// Lerp Post Process weight
+	const float NewPPWeight = FMath::Lerp(HipPPWeight, ADSPPWeight, ADSAlpha);
+	FirstPersonCameraComponent->PostProcessBlendWeight = NewPPWeight;
+}
+
+
 
 void AZombieGameCharacter::SimpleReload()
 {

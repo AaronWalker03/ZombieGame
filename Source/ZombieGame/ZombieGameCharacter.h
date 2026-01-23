@@ -76,9 +76,11 @@ protected:
 
 	void LoadCustomisationFromSave();
 
+	USkeletalMeshComponent* FirstPersonMesh;
+
 
 	UPROPERTY(EditDefaultsOnly, Category = "ADS")
-	FVector weaponADSOffset;
+	FVector ADSOffset;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* simpleReload;
@@ -190,9 +192,33 @@ public:
 	float BaseWalkSpeed = 450.f;
 
 	// Animation
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
 	float WalkAnimAlpha = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
 	FVector WalkOffset = FVector::ZeroVector;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
 	FRotator WalkRotation = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
+	float ADSAlpha = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
+	float ADSInterpSpeed = 12.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
+	float HipFOV = 90.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
+	float ADSFOV = 65.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
+	float HipPPWeight = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
+	float ADSPPWeight = 1.0f;
+
 
 	// Footsteps
 	float FootstepTimer = 0.f;
@@ -266,6 +292,8 @@ protected:
 	void StartSprint();
 	void StopSprint();
 	void UpdateMovementSpeed(float DeltaTime);
+
+	void UpdateADS(float DeltaTime);
 
 	void OnFire();
 	

@@ -36,14 +36,13 @@ protected:
 	void SpawnZombie();
 	void StartNewRound();
 	void RoundManager();
+	//AZombieSpawnPoint* GetClosestSpawnPoint();
 
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	TSubclassOf<AZombieAi> ZombieClass;
 
 	UPROPERTY(EditAnywhere, Category = "Spawning")
-	TArray<AActor*> SpawnPoints;
-
-	int spawnIndex;
+	TArray<AZombieSpawnPoint> SpawnPoints;
 
 public:	
 	// Called every frame

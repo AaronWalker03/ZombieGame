@@ -3,6 +3,8 @@
 
 #include "ZombieSpawner.h"
 #include "ZombieAi.h"
+#include "ZombieSpawnPoint.h"
+#include "EngineUtils.h"
 
 //implement zombies dying so rounds actually change
 
@@ -19,6 +21,10 @@ void AZombieSpawner::BeginPlay()
 {
 	Super::BeginPlay();
 	
+    for (TActorIterator<AZombieSpawnPoint> it(GetWorld()); it; ++it)
+    {
+        SpawnPoints.Add(*it);
+    }
 }
 
 // Called every frame

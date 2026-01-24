@@ -250,7 +250,7 @@ void AZombieAi::DismemberLimb(UPrimitiveComponent* HitComp)
 
         //could be cool for the blood fx at first it spurts out loads then over time goes down as less blood in body
 
-      /*  if (BloodFX)
+        if (BloodFX)
         {
             FVector BloodLoc = LimbComp->GetComponentLocation();
             UNiagaraComponent* NiagaraComp =
@@ -264,8 +264,8 @@ void AZombieAi::DismemberLimb(UPrimitiveComponent* HitComp)
                     true
                 );
 
-            UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodFX, BloodLoc, FRotator::ZeroRotator, FVector(1.f), true);
-        }*/
+            //UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodFX, BloodLoc, FRotator::ZeroRotator, FVector(1.f), true);
+        }
 
        // LimbComp->SetLifeSpan(10.0f);
     }

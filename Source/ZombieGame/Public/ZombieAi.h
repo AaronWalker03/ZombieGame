@@ -8,6 +8,7 @@
 #include "CombatInterface.h"
 #include "ZombieAi.generated.h"
 
+class UNiagaraSystem;
 //implement ai reacting to gunshot sounds, decibels could be implemented for hearing range
 	//this is where different amunition comes into play for supersonic or subsonic ammunition
 
@@ -124,8 +125,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
 	UStaticMeshComponent* RFoot;
 
-	/*UPROPERTY(EditAnywhere, Category="VFX")
-	UNiagaraSystem* BloodFX;*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	UNiagaraSystem* BloodFX;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
 	float damage;

@@ -41,8 +41,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	TSubclassOf<AZombieAi> ZombieClass;
 
-	UPROPERTY(EditAnywhere, Category = "Spawning")
-	TArray<AZombieSpawnPoint> SpawnPoints;
+	//UPROPERTY(EditAnywhere, Category = "Spawning")
+	//TArray<AZombieSpawnPoint> SpawnPoints;
 
 public:	
 	// Called every frame

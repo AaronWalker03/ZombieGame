@@ -23,7 +23,7 @@ void AZombieSpawner::BeginPlay()
 	
     for (TActorIterator<AZombieSpawnPoint> it(GetWorld()); it; ++it)
     {
-        SpawnPoints.Add(*it);
+       // SpawnPoints.Add(*it);
     }
 }
 
@@ -67,20 +67,20 @@ void AZombieSpawner::StartNewRound()
 
 void AZombieSpawner::SpawnZombie()
 {
-    AActor* SpawnPoint = SpawnPoints[FMath::RandRange(0, SpawnPoints.Num() - 1)];
+   // AActor* SpawnPoint = SpawnPoints[FMath::RandRange(0, SpawnPoints.Num() - 1)];
 
-    FVector Location = SpawnPoint->GetActorLocation();
+   // FVector Location = SpawnPoint->GetActorLocation();
 
-    Location.Z += 100.f;
+    //Location.Z += 100.f;
 
-    FRotator Rotation = SpawnPoint->GetActorRotation();
+    //FRotator Rotation = SpawnPoint->GetActorRotation();
 
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+    //FActorSpawnParameters SpawnParams;
+    //SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-    // Spawn zombie
-    GetWorld()->SpawnActor<AZombieAi>(ZombieClass, Location, Rotation, SpawnParams);
+    //// Spawn zombie
+    //GetWorld()->SpawnActor<AZombieAi>(ZombieClass, Location, Rotation, SpawnParams);
 
-    AliveZombies++;
-    NumToSpawn--;
+    //AliveZombies++;
+    //NumToSpawn--;
 }

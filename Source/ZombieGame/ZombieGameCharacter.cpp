@@ -123,10 +123,11 @@ void AZombieGameCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	UpdateWalkAnimation(DeltaTime);
+	
 	HandleFootsteps(DeltaTime);
 	UpdateMovementSpeed(DeltaTime);
 	UpdateADS(DeltaTime);
+	UpdateWalkAnimation(DeltaTime);
 
 	if (EquippedWeapon)
 	{
@@ -325,6 +326,7 @@ void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 
 	DOREPLIFETIME(AZombieGameCharacter, PlayerCustomisation);
 	DOREPLIFETIME(AZombieGameCharacter, CurrentHealth);
+	DOREPLIFETIME(AZombieGameCharacter, bIsSprinting);
 }
 
 void AZombieGameCharacter::AddXP(int amount)
@@ -439,6 +441,9 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(speedReload, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SpeedReload);
 		EnhancedInputComponent->BindAction(magCheck, ETriggerEvent::Completed, this, &AZombieGameCharacter::MagCheck);
 
+		EnhancedInputComponent->BindAction(sprintingAction, ETriggerEvent::Started, this, &AZombieGameCharacter::StartSprint);
+		EnhancedInputComponent->BindAction(sprintingAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopSprint);
+
 		//EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::OnFire);
 
 	}
@@ -550,13 +555,12 @@ void AZombieGameCharacter::OnRep_CurrentHealth()
 void AZombieGameCharacter::UpdateMovementSpeed(float DeltaTime)
 {
 	float TargetSpeed = bIsSprinting ? SprintSpeed : BaseWalkSpeed;
-
 	float CurrentSpeed = GetCharacterMovement()->MaxWalkSpeed;
 
-	GetCharacterMovement()->MaxWalkSpeed =
-		FMath::FInterpTo(CurrentSpeed, TargetSpeed, DeltaTime, SpeedInterpRate);
-}
+	float NewSpeed = FMath::FInterpTo(CurrentSpeed, TargetSpeed, DeltaTime, SpeedInterpRate);
 
+	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+}
 
 void AZombieGameCharacter::StartSprint()
 {
@@ -567,7 +571,6 @@ void AZombieGameCharacter::StopSprint()
 {
 	bIsSprinting = false;
 }
-
 
 void AZombieGameCharacter::HandleFootsteps(float DeltaTime)
 {
@@ -591,7 +594,6 @@ void AZombieGameCharacter::HandleFootsteps(float DeltaTime)
 		);*/
 	}
 }
-
 
 void AZombieGameCharacter::UpdateWalkAnimation(float DeltaTime)
 {
@@ -625,8 +627,6 @@ void AZombieGameCharacter::MoveInput(const FInputActionValue& Value)
 
 	// pass the axis values to the move input
 	DoMove(MovementVector.X, MovementVector.Y);
-
-	ShouldStopSprint(MovementVector.Y);
 }
 
 void AZombieGameCharacter::LookInput(const FInputActionValue& Value)

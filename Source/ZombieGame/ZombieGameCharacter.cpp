@@ -37,6 +37,13 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 //double tap r quick reload but lose the mag, conveniant if you fully empty
 //hold r mag check see how much ammo left
 
+//make multi weapon slot system, melee, pistol, 2 big guns
+//tie this into customisation
+//then change the animation bp depending on which weapon holding
+
+//for customisation menu make it like tarkov so we dont have custimsation issues
+//just a simple send and receive and assign
+
 
 AZombieGameCharacter::AZombieGameCharacter()
 {
@@ -122,12 +129,13 @@ void AZombieGameCharacter::BeginPlay()
 void AZombieGameCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 	
 	HandleFootsteps(DeltaTime);
-	UpdateMovementSpeed(DeltaTime);
-	UpdateADS(DeltaTime);
+	UpdateMovementSpeed(DeltaTime);	
 	UpdateWalkAnimation(DeltaTime);
+	UpdateADS(DeltaTime);
+	
+
 
 	if (EquippedWeapon)
 	{
@@ -486,19 +494,21 @@ void AZombieGameCharacter::StopAim()
 
 void AZombieGameCharacter::UpdateADS(float DeltaTime)
 {
-	const float TargetAlpha = bIsAiming ? 1.0f : 0.0f;
+	float TargetAlpha = bIsAiming ? 1.0f : 0.0f;
 
-	// Smoothly move alpha toward target
+	// Always interpolate — no snapping
 	ADSAlpha = FMath::FInterpTo(ADSAlpha, TargetAlpha, DeltaTime, ADSInterpSpeed);
 
-	// Lerp FOV
+	// Camera FOV
 	const float NewFOV = FMath::Lerp(HipFOV, ADSFOV, ADSAlpha);
 	FirstPersonCameraComponent->SetFieldOfView(NewFOV);
 
-	// Lerp Post Process weight
+	// Post process
 	const float NewPPWeight = FMath::Lerp(HipPPWeight, ADSPPWeight, ADSAlpha);
 	FirstPersonCameraComponent->PostProcessBlendWeight = NewPPWeight;
 }
+
+
 
 
 
@@ -565,6 +575,7 @@ void AZombieGameCharacter::UpdateMovementSpeed(float DeltaTime)
 void AZombieGameCharacter::StartSprint()
 {
 	bIsSprinting = true;
+	bIsAiming = false;
 }
 
 void AZombieGameCharacter::StopSprint()

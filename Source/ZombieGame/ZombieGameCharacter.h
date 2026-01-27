@@ -79,8 +79,6 @@ protected:
 	USkeletalMeshComponent* FirstPersonMesh;
 
 
-	UPROPERTY(EditDefaultsOnly, Category = "ADS")
-	FVector ADSOffset;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* simpleReload;
@@ -180,9 +178,6 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	USpringArmComponent* Cam_Root;
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Sprint")
-	void ShouldStopSprint(float VelocityAxis);
-
 
 	//change this to a list, so can have specific ammo per mag
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mag Count")
@@ -219,6 +214,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
 	float ADSPPWeight = 1.0f;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
+	bool bIsSprinting = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
+	FVector ADSOffset;
+
 
 	// Footsteps
 	float FootstepTimer = 0.f;
@@ -235,7 +236,7 @@ public:
 
 
 	// State
-	bool bIsSprinting = false;
+
 
 	float SprintSpeed = 650.f;
 	float SpeedInterpRate = 8.f;

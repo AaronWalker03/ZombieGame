@@ -37,6 +37,13 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 //double tap r quick reload but lose the mag, conveniant if you fully empty
 //hold r mag check see how much ammo left
 
+//make multi weapon slot system, melee, pistol, 2 big guns
+//tie this into customisation
+//then change the animation bp depending on which weapon holding
+
+//for customisation menu make it like tarkov so we dont have custimsation issues
+//just a simple send and receive and assign
+
 
 AZombieGameCharacter::AZombieGameCharacter()
 {
@@ -122,11 +129,13 @@ void AZombieGameCharacter::BeginPlay()
 void AZombieGameCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	UpdateWalkAnimation(DeltaTime);
+	
 	HandleFootsteps(DeltaTime);
-	UpdateMovementSpeed(DeltaTime);
+	UpdateMovementSpeed(DeltaTime);	
+	UpdateWalkAnimation(DeltaTime);
 	UpdateADS(DeltaTime);
+	
+
 
 	if (EquippedWeapon)
 	{
@@ -325,6 +334,7 @@ void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 
 	DOREPLIFETIME(AZombieGameCharacter, PlayerCustomisation);
 	DOREPLIFETIME(AZombieGameCharacter, CurrentHealth);
+	DOREPLIFETIME(AZombieGameCharacter, bIsSprinting);
 }
 
 void AZombieGameCharacter::AddXP(int amount)
@@ -439,6 +449,9 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(speedReload, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SpeedReload);
 		EnhancedInputComponent->BindAction(magCheck, ETriggerEvent::Completed, this, &AZombieGameCharacter::MagCheck);
 
+		EnhancedInputComponent->BindAction(sprintingAction, ETriggerEvent::Started, this, &AZombieGameCharacter::StartSprint);
+		EnhancedInputComponent->BindAction(sprintingAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopSprint);
+
 		//EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::OnFire);
 
 	}
@@ -481,19 +494,21 @@ void AZombieGameCharacter::StopAim()
 
 void AZombieGameCharacter::UpdateADS(float DeltaTime)
 {
-	const float TargetAlpha = bIsAiming ? 1.0f : 0.0f;
+	float TargetAlpha = bIsAiming ? 1.0f : 0.0f;
 
-	// Smoothly move alpha toward target
+	// Always interpolate — no snapping
 	ADSAlpha = FMath::FInterpTo(ADSAlpha, TargetAlpha, DeltaTime, ADSInterpSpeed);
 
-	// Lerp FOV
+	// Camera FOV
 	const float NewFOV = FMath::Lerp(HipFOV, ADSFOV, ADSAlpha);
 	FirstPersonCameraComponent->SetFieldOfView(NewFOV);
 
-	// Lerp Post Process weight
+	// Post process
 	const float NewPPWeight = FMath::Lerp(HipPPWeight, ADSPPWeight, ADSAlpha);
 	FirstPersonCameraComponent->PostProcessBlendWeight = NewPPWeight;
 }
+
+
 
 
 
@@ -550,24 +565,23 @@ void AZombieGameCharacter::OnRep_CurrentHealth()
 void AZombieGameCharacter::UpdateMovementSpeed(float DeltaTime)
 {
 	float TargetSpeed = bIsSprinting ? SprintSpeed : BaseWalkSpeed;
-
 	float CurrentSpeed = GetCharacterMovement()->MaxWalkSpeed;
 
-	GetCharacterMovement()->MaxWalkSpeed =
-		FMath::FInterpTo(CurrentSpeed, TargetSpeed, DeltaTime, SpeedInterpRate);
-}
+	float NewSpeed = FMath::FInterpTo(CurrentSpeed, TargetSpeed, DeltaTime, SpeedInterpRate);
 
+	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+}
 
 void AZombieGameCharacter::StartSprint()
 {
 	bIsSprinting = true;
+	bIsAiming = false;
 }
 
 void AZombieGameCharacter::StopSprint()
 {
 	bIsSprinting = false;
 }
-
 
 void AZombieGameCharacter::HandleFootsteps(float DeltaTime)
 {
@@ -591,7 +605,6 @@ void AZombieGameCharacter::HandleFootsteps(float DeltaTime)
 		);*/
 	}
 }
-
 
 void AZombieGameCharacter::UpdateWalkAnimation(float DeltaTime)
 {
@@ -625,8 +638,6 @@ void AZombieGameCharacter::MoveInput(const FInputActionValue& Value)
 
 	// pass the axis values to the move input
 	DoMove(MovementVector.X, MovementVector.Y);
-
-	ShouldStopSprint(MovementVector.Y);
 }
 
 void AZombieGameCharacter::LookInput(const FInputActionValue& Value)

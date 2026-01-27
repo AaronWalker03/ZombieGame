@@ -21,10 +21,8 @@ void AZombieSpawner::BeginPlay()
 {
 	Super::BeginPlay();
 	
-    for (TActorIterator<AZombieSpawnPoint> it(GetWorld()); it; ++it)
-    {
-        SpawnPoints.Add(*it);
-    }
+    GetSpawnPoints();
+    GetPlayerPawns();
 }
 
 // Called every frame
@@ -52,6 +50,57 @@ void AZombieSpawner::RoundManager()
     }
 }
 
+void AZombieSpawner::GetSpawnPoints()
+{
+    for (TActorIterator<AZombieSpawnPoint> it(GetWorld()); it; ++it)
+    {
+        SpawnPoints.Add(*it);
+    }
+}
+
+void AZombieSpawner::GetPlayerPawns()
+{
+    for (FConstPlayerControllerIterator pcIt = GetWorld()->GetPlayerControllerIterator(); pcIt; ++pcIt)
+    {
+        APlayerController* pc = pcIt->Get();
+        if (!pc) continue;
+
+        APawn* pawn = pc->GetPawn();
+        if (!pawn) continue;
+
+        PlayerPawns.Add(pawn);
+    }
+}
+
+AZombieSpawnPoint* AZombieSpawner::GetClosestSpawnPointToPlayer()
+{
+    AZombieSpawnPoint* closestSpawn = nullptr;
+    float closestDistSq = TNumericLimits<float>::Max();
+
+    for (APawn* pawn : PlayerPawns)
+    {
+        FVector playerLocation = pawn->GetActorLocation();
+
+        for (AZombieSpawnPoint* spawnPoint : SpawnPoints)
+        {
+            if (!IsValid(spawnPoint)) continue;
+
+            float distSq = FVector::DistSquared(
+                spawnPoint->GetActorLocation(),
+                playerLocation
+            );
+
+            if (distSq < closestDistSq)
+            {
+                closestDistSq = distSq;
+                closestSpawn = spawnPoint;
+            }
+        }
+    }
+
+    return closestSpawn;
+}
+
 void AZombieSpawner::StartNewRound()
 {
     RoundNum++;
@@ -67,13 +116,13 @@ void AZombieSpawner::StartNewRound()
 
 void AZombieSpawner::SpawnZombie()
 {
-    AActor* SpawnPoint = SpawnPoints[FMath::RandRange(0, SpawnPoints.Num() - 1)];
+    AZombieSpawnPoint* spawnPoint = GetClosestSpawnPointToPlayer();
 
-    FVector Location = SpawnPoint->GetActorLocation();
+    FVector Location = spawnPoint->GetActorLocation();
 
-    Location.Z += 100.f;
+    //Location.Z += 100.f;
 
-    FRotator Rotation = SpawnPoint->GetActorRotation();
+    FRotator Rotation = spawnPoint->GetActorRotation();
 
     FActorSpawnParameters SpawnParams;
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;

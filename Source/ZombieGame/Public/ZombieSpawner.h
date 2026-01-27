@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "ZombieSpawner.generated.h"
 
+class AZombieSpawnPoint;
+
 UCLASS()
 class ZOMBIEGAME_API AZombieSpawner : public AActor
 {
@@ -36,13 +38,19 @@ protected:
 	void SpawnZombie();
 	void StartNewRound();
 	void RoundManager();
-	//AZombieSpawnPoint* GetClosestSpawnPoint();
+	void GetSpawnPoints();
+	void GetPlayerPawns();
+
+	AZombieSpawnPoint* GetClosestSpawnPointToPlayer();
 
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	TSubclassOf<AZombieAi> ZombieClass;
 
 	UPROPERTY(EditAnywhere, Category = "Spawning")
-	TArray<AZombieSpawnPoint> SpawnPoints;
+	TArray<AZombieSpawnPoint*> SpawnPoints;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	TArray<APawn*> PlayerPawns;
 
 public:	
 	// Called every frame

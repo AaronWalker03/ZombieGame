@@ -4,6 +4,9 @@
 #include "Weapon.h"
 #include "Ammunition.h"
 #include "Engine/World.h"
+#include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 //need to fuck about with accuracy cose barrel length plays with it
@@ -106,6 +109,11 @@ void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float b
 
 void AWeapon::Shoot()
 {
+    //could either do animation or just use a slide to save time?
+    //would mean only need reload animation and arm animation for shooting
+
+
+
     if (mags.Num() == 0 || currentMagIndex >= mags.Num())
     {
         UE_LOG(LogTemp, Warning, TEXT("No mags available!"));
@@ -140,17 +148,43 @@ void AWeapon::Shoot()
         Bullet->velocityms = velocityms;
     }
 
+    bool bIsLastRound = (mags[currentMagIndex] == 1);
+
+    if (bIsLastRound && FireLastAnimation)
+    {
+        mesh->PlayAnimation(FireLastAnimation, false);
+        bBoltLockedOpen = true;   // bolt now stays open
+    }
+    else if (FireAnimation)
+    {
+        mesh->PlayAnimation(FireAnimation, false);
+    }
+
+
     mags[currentMagIndex]--;
     UE_LOG(LogTemp, Warning, TEXT("Fired! %d bullets left in current mag"), mags[currentMagIndex]);
 
     recoilPitch += recoilKick;
     recoilYaw += FMath::RandRange(-recoilShake, recoilShake);
 
+   
+   
 
-    //if (MuzzleFlash)
-    //{
-    //	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, TEXT("MuzzleFlashSocket"));
-    //}
+
+    if (MuzzleFlash && mesh)
+    {
+        UGameplayStatics::SpawnEmitterAttached(
+            MuzzleFlash,
+            mesh,
+            TEXT("Muzzle"),                 
+            FVector::ZeroVector,
+            FRotator::ZeroRotator,
+            FVector(0.02, 0.02, 0.02),
+            EAttachLocation::SnapToTarget,
+            true
+        );
+    }
+
 
     //// Play sound if exists
     //if (FireSound)
@@ -161,14 +195,22 @@ void AWeapon::Shoot()
 
 void AWeapon::Reload()
 {
-    if (currentMagIndex >= mags.Num() - 1)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("No more mags left!"));
-        return;
-    }
+    bool bWasEmpty = (mags[currentMagIndex] == 0);
 
     currentMagIndex++;
-    UE_LOG(LogTemp, Warning, TEXT("Reloaded to mag %d with %d bullets"), currentMagIndex, mags[currentMagIndex])
+
+    if (mesh)
+    {
+        if (bWasEmpty && ReloadEmptyAnimation)
+        {
+            mesh->PlayAnimation(ReloadEmptyAnimation, false);
+            bBoltLockedOpen = false;
+        }
+        else if (ReloadAnimation)
+        {
+            mesh->PlayAnimation(ReloadAnimation, false);
+        }
+    }
 }
 
 // Called every frame

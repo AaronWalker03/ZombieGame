@@ -220,6 +220,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim Variables")
 	FVector ADSOffset;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* ReloadMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* fullReloadMontage;
+	
+
 
 	// Footsteps
 	float FootstepTimer = 0.f;

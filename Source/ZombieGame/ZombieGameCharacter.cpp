@@ -514,10 +514,25 @@ void AZombieGameCharacter::UpdateADS(float DeltaTime)
 
 void AZombieGameCharacter::SimpleReload()
 {
+	if (EquippedWeapon->bBoltLockedOpen)
+	{
+		if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())
+		{
+			AnimInstance->Montage_Play(fullReloadMontage, 1.2f);
+		}
+	}
+	else
+	{
+		if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())
+		{
+			AnimInstance->Montage_Play(ReloadMontage, 1.2f);
+		}
+	}
+
 	bIsReloading = true;
-	//EquippedWeapon->Reload();
+	EquippedWeapon->Reload();
 	//keep mag so more ammo can be put into it later
-	
+
 }
 
 void AZombieGameCharacter::SpeedReload()

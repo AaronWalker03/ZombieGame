@@ -29,7 +29,7 @@ public:
 	float recoilRecoverySpeed = 10.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "ADS")
-	FVector weaponADSOffset = FVector(600, 0, 300);
+	FVector weaponADSOffset = FVector(600, 0, 450);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Recoil|Physics")
 	float WeaponMassKG = 3.1f;
@@ -58,6 +58,26 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	int currentMagIndex = 0;
+
+	// In AWeapon.h
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimationAsset* FireAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimationAsset* FireLastAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimationAsset* ReloadAnimation;       
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimationAsset* ReloadEmptyAnimation;   
+
+	bool bBoltLockedOpen = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	UParticleSystem* MuzzleFlash;
+
 
 	//get weapon attachments and ajust for recoil
 	//also depending on the bullet used this will affect the recoil

@@ -43,6 +43,13 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //for customisation menu make it like tarkov so we dont have custimsation issues
 //just a simple send and receive and assign
+//save file needs to be different because when adding xp manually saving to file each time but doesnt do the rest for some reason
+//otherwise make it when you die or extract it saves everything
+//change this so that it applies the other players stuff on client side on THEIR character
+//curently does it for the client
+//also need to make it so that weapons are applied to the third person meshes for other players to see
+
+//use current weapons then tell it to only equip to third person if isnt client?
 
 
 AZombieGameCharacter::AZombieGameCharacter()
@@ -78,7 +85,6 @@ AZombieGameCharacter::AZombieGameCharacter()
 	FirstPersonCameraComponent->FirstPersonFieldOfView = 90.0f;
 	FirstPersonCameraComponent->FirstPersonScale = 0.6f;
 
-	//GetMesh()->SetupAttachment(FP_Root);
 	GetMesh()->SetOwnerNoSee(true);
 	GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
 
@@ -161,11 +167,10 @@ void AZombieGameCharacter::Tick(float DeltaTime)
 			EquippedWeapon->recoilYaw, 0.f, DeltaTime,
 			EquippedWeapon->recoilRecoverySpeed);
 	}
-
+	 
 }
 
-//save file needs to be different because when adding xp manually saving to file each time but doesnt do the rest for some reason
-//otherwise make it when you die or extract it saves everything
+
 
 void AZombieGameCharacter::SaveCustomisation()
 {
@@ -234,8 +239,7 @@ void AZombieGameCharacter::Server_SendCustomisation_Implementation(const FPlayer
 
 void AZombieGameCharacter::OnRep_Customisation()
 {
-	//change this so that it applies the other players stuff on client side on THEIR character
-	//curently does it for the client
+	
 	ApplyCustomisation(PlayerCustomisation);
 }
 
@@ -507,10 +511,6 @@ void AZombieGameCharacter::UpdateADS(float DeltaTime)
 	const float NewPPWeight = FMath::Lerp(HipPPWeight, ADSPPWeight, ADSAlpha);
 	FirstPersonCameraComponent->PostProcessBlendWeight = NewPPWeight;
 }
-
-
-
-
 
 void AZombieGameCharacter::SimpleReload()
 {

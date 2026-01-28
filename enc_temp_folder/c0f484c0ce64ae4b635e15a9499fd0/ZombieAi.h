@@ -98,8 +98,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
 	UStaticMeshComponent* TorsoMesh;
 
-	//UPROPERTY(VisibleAnywhere, Category = "Body Parts")
-	//UStaticMeshComponent* LHand;
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* LHand;
 
 	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
 	UStaticMeshComponent* RUpArm;
@@ -107,8 +107,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
 	UStaticMeshComponent* RForearm;
 
-	//UPROPERTY(VisibleAnywhere, Category = "Body Parts")
-	//UStaticMeshComponent* RHand;
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* RHand;
 
 	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
 	UStaticMeshComponent* LThigh;

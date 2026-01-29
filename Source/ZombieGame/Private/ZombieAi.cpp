@@ -13,6 +13,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
+#include "ZombieSpawner.h"
 
 // Sets default values
 AZombieAi::AZombieAi()
@@ -291,6 +292,11 @@ int AZombieAi::MeleeAttack_Implementation()
     return 0;
 }
 
+void AZombieAi::SetSpawner(AZombieSpawner* inSpawner)
+{
+    Spawner = inSpawner;
+}
+
 void AZombieAi::KillZombie()
 {
     TArray<UActorComponent*> Components;
@@ -311,6 +317,8 @@ void AZombieAi::KillZombie()
 
     UBehaviorTree* tree = GetBehaviourTree();
     tree->FinishDestroy();
+
+    if (Spawner) Spawner->NotifyZombieDied();
 
     // After next round, Destroy actor and components if we want to allow the bodies to pile up. Or just set a timer to Call Destroy actor
 

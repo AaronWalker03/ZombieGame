@@ -9,6 +9,7 @@
 #include "ZombieAi.generated.h"
 
 class UNiagaraSystem;
+class AZombieSpawner;
 //implement ai reacting to gunshot sounds, decibels could be implemented for hearing range
 	//this is where different amunition comes into play for supersonic or subsonic ammunition
 
@@ -80,6 +81,8 @@ public:
 	UBehaviorTree* GetBehaviourTree() const;
 
 	int MeleeAttack_Implementation() override;
+
+	void SetSpawner(AZombieSpawner* inSpawner);
 
 protected:
 	virtual void BeginPlay() override;
@@ -195,6 +198,9 @@ private:
 
 	UPROPERTY()
 	FTimerHandle TimerHandle;
+
+	UPROPERTY()
+	AZombieSpawner* Spawner;
 
 	UFUNCTION()
 	void DestroyZombie();

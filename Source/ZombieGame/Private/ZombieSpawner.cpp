@@ -13,7 +13,7 @@ AZombieSpawner::AZombieSpawner()
 	PrimaryActorTick.bCanEverTick = true;
 
     AliveZombies = 0;
-    NumToSpawn = 6;
+    NumToSpawn = BaseNumOfZombies;
     RoundNum = 1;
 }
 
@@ -72,33 +72,72 @@ void AZombieSpawner::GetPlayerPawns()
     }
 }
 
-AZombieSpawnPoint* AZombieSpawner::GetClosestSpawnPointToPlayer()
+void AZombieSpawner::TrySpawnZombies()
+{
+    if (NumToSpawn <= 0) return;
+
+    if (AliveZombies >= HordeCap) return;
+
+    int32 canSpawn = HordeCap - AliveZombies;
+    int32 spawnNow = FMath::Min(canSpawn, NumToSpawn);
+
+    SpawnWave(spawnNow);
+}
+
+void AZombieSpawner::SpawnWave(int SpawnCount)
+{
+    if (PlayerPawns.Num() == 0) return;
+
+    int ZombiesPerPlayer = SpawnCount / PlayerPawns.Num();
+    int Remainder = SpawnCount % PlayerPawns.Num();
+
+    for (APawn* player : PlayerPawns)
+    {
+        int PlayerSpawnCount = ZombiesPerPlayer;
+
+        if (Remainder > 0)
+        {
+            PlayerSpawnCount++;
+            Remainder--;
+        }
+
+        for (int32 i = 0; i < PlayerSpawnCount; i++)
+        {
+            SpawnZombieNearPlayer(player);
+            NumToSpawn--;
+        }
+    }
+}
+
+AZombieSpawnPoint* AZombieSpawner::GetClosestSpawnPointToPlayer(APawn* Player)
 {
     AZombieSpawnPoint* closestSpawn = nullptr;
     float closestDistSq = TNumericLimits<float>::Max();
 
-    for (APawn* pawn : PlayerPawns)
+    FVector playerLocation = Player->GetActorLocation();
+
+    for (AZombieSpawnPoint* spawnPoint : SpawnPoints)
     {
-        FVector playerLocation = pawn->GetActorLocation();
+        if (!IsValid(spawnPoint)) continue;
 
-        for (AZombieSpawnPoint* spawnPoint : SpawnPoints)
+        float distSq = FVector::DistSquared(
+            spawnPoint->GetActorLocation(),
+            playerLocation
+        );
+
+        if (distSq < closestDistSq)
         {
-            if (!IsValid(spawnPoint)) continue;
-
-            float distSq = FVector::DistSquared(
-                spawnPoint->GetActorLocation(),
-                playerLocation
-            );
-
-            if (distSq < closestDistSq)
-            {
-                closestDistSq = distSq;
-                closestSpawn = spawnPoint;
-            }
+            closestDistSq = distSq;
+            closestSpawn = spawnPoint;
         }
     }
 
     return closestSpawn;
+}
+
+void AZombieSpawner::NotifyZombieDied()
+{
+    AliveZombies--;
 }
 
 void AZombieSpawner::StartNewRound()
@@ -114,22 +153,47 @@ void AZombieSpawner::StartNewRound()
         RoundNum, NumToSpawn);
 }
 
-void AZombieSpawner::SpawnZombie()
+void AZombieSpawner::SpawnZombieNearPlayer(APawn* Player)
 {
-    AZombieSpawnPoint* spawnPoint = GetClosestSpawnPointToPlayer();
+    if (!Player) return;
 
-    FVector Location = spawnPoint->GetActorLocation();
+    AZombieSpawnPoint* spawnPoint = GetClosestSpawnPointToPlayer(Player);
+    if (!spawnPoint) return;
 
-    //Location.Z += 100.f;
+    FVector location = spawnPoint->GetActorLocation();
+    FRotator rotation = spawnPoint->GetActorRotation();
 
-    FRotator Rotation = spawnPoint->GetActorRotation();
+    FActorSpawnParameters spawnParams;
+    spawnParams.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+    AZombieAi* zombie = GetWorld()->SpawnActor<AZombieAi>(
+        ZombieClass,
+        location,
+        rotation,
+        spawnParams
+    );
 
-    // Spawn zombie
-    GetWorld()->SpawnActor<AZombieAi>(ZombieClass, Location, Rotation, SpawnParams);
+    if (zombie)
+    {
+        zombie->SetSpawner(this);
+        AliveZombies++;
+    }
 
-    AliveZombies++;
-    NumToSpawn--;
+    //AZombieSpawnPoint* spawnPoint = GetClosestSpawnPointToPlayer();
+
+    //FVector Location = spawnPoint->GetActorLocation();
+
+    ////Location.Z += 100.f;
+
+    //FRotator Rotation = spawnPoint->GetActorRotation();
+
+    //FActorSpawnParameters SpawnParams;
+    //SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+    //// Spawn zombie
+    //GetWorld()->SpawnActor<AZombieAi>(ZombieClass, Location, Rotation, SpawnParams);
+
+    //AliveZombies++;
+    //NumToSpawn--;
 }

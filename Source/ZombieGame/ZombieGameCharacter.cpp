@@ -50,7 +50,11 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 //also need to make it so that weapons are applied to the third person meshes for other players to see
 
 //use current weapons then tell it to only equip to third person if isnt client?
+//for first person shadows, get the mesh of weapon and attach it to third person mesh
 
+//add vaulting instead of jumping?
+
+//add leaning
 
 AZombieGameCharacter::AZombieGameCharacter()
 {
@@ -129,6 +133,7 @@ void AZombieGameCharacter::BeginPlay()
 
 	SpawnWeapon();
 
+	//make it so that on start each weapon that is equipped runs the ads offset function
 	ADSOffset = EquippedWeapon->weaponADSOffset;
 }
 
@@ -141,24 +146,17 @@ void AZombieGameCharacter::Tick(float DeltaTime)
 	UpdateWalkAnimation(DeltaTime);
 	UpdateADS(DeltaTime);
 	
-
-
 	if (EquippedWeapon)
 	{
-
-		//recoil dont work because of hierarchy?
-
 		float pitchStep = EquippedWeapon->recoilPitch * DeltaTime * 20.0f;
 		float yawStep = EquippedWeapon->recoilYaw * DeltaTime * 20.0f;
 
 		AddControllerPitchInput(-pitchStep);
 		AddControllerYawInput(yawStep);
 
-		// Remove what we just applied
 		EquippedWeapon->recoilPitch -= pitchStep;
 		EquippedWeapon->recoilYaw -= yawStep;
 
-		// Smooth recovery (weapon settles back)
 		EquippedWeapon->recoilPitch = FMath::FInterpTo(
 			EquippedWeapon->recoilPitch, 0.f, DeltaTime,
 			EquippedWeapon->recoilRecoverySpeed);
@@ -381,6 +379,7 @@ void AZombieGameCharacter::SpawnWeapon()
 			);
 
 			EquippedWeapon = MyWeapon;
+			EquippedWeapon->mesh->SetCastShadow(false);
 		}
 	}
 }
@@ -449,9 +448,12 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::StartAim);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopAim);
 
-		EnhancedInputComponent->BindAction(simpleReload, ETriggerEvent::Started, this, &AZombieGameCharacter::SimpleReload);
-		EnhancedInputComponent->BindAction(speedReload, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SpeedReload);
-		EnhancedInputComponent->BindAction(magCheck, ETriggerEvent::Completed, this, &AZombieGameCharacter::MagCheck);
+		EnhancedInputComponent->BindAction(simpleReload, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SimpleReload);
+		EnhancedInputComponent->BindAction(magCheck, ETriggerEvent::Triggered, this, &AZombieGameCharacter::MagCheck);
+	/*	EnhancedInputComponent->BindAction(simpleReload, ETriggerEvent::Started, this, &AZombieGameCharacter::ReloadHoldStarted);
+		EnhancedInputComponent->BindAction(simpleReload, ETriggerEvent::Completed, this, &AZombieGameCharacter::OnReloadKeyReleased);*/
+		//EnhancedInputComponent->BindAction(speedReload, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SpeedReload);
+		
 
 		EnhancedInputComponent->BindAction(sprintingAction, ETriggerEvent::Started, this, &AZombieGameCharacter::StartSprint);
 		EnhancedInputComponent->BindAction(sprintingAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopSprint);
@@ -481,14 +483,22 @@ void AZombieGameCharacter::SetupStimulusSource()
 }
 
 //WEAPON ACTIONS
+
+//do this after shower
 void AZombieGameCharacter::OnFire()
 {
-	EquippedWeapon->Shoot();
+	if (!bIsReloading && !bIsMagChecking)
+	{
+		EquippedWeapon->Shoot();
+	}
 }
 
 void AZombieGameCharacter::StartAim()
 {
-	bIsAiming = true;
+	if (!bIsReloading && !bIsMagChecking)
+	{
+		bIsAiming = true;
+	}
 }
 
 void AZombieGameCharacter::StopAim()
@@ -512,13 +522,38 @@ void AZombieGameCharacter::UpdateADS(float DeltaTime)
 	FirstPersonCameraComponent->PostProcessBlendWeight = NewPPWeight;
 }
 
+
+void AZombieGameCharacter::OnReloadMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	bIsReloading = false;
+}
+
+void AZombieGameCharacter::OnMagCheckMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	bIsMagChecking = false;
+}
+
 void AZombieGameCharacter::SimpleReload()
 {
+	//add a reload time float so that shooting and other stuff is stopped from running
+	//maybe change mag system to be on the player instead of getting it from the weapon cpp
+
+	if (bIsReloading || bIsMagChecking)
+	{
+		return;
+	}
+
+	bIsReloading = true;
+
 	if (EquippedWeapon->bBoltLockedOpen)
 	{
 		if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())
 		{
 			AnimInstance->Montage_Play(fullReloadMontage, 1.2f);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AZombieGameCharacter::OnReloadMontageEnded);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, fullReloadMontage);
 		}
 	}
 	else
@@ -526,15 +561,20 @@ void AZombieGameCharacter::SimpleReload()
 		if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())
 		{
 			AnimInstance->Montage_Play(ReloadMontage, 1.2f);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AZombieGameCharacter::OnReloadMontageEnded);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, ReloadMontage);
 		}
 	}
 
-	bIsReloading = true;
+	
 	EquippedWeapon->Reload();
 	//keep mag so more ammo can be put into it later
 
 }
 
+//do the same as simple reload but faster and lose mag
 void AZombieGameCharacter::SpeedReload()
 {
 	//if lose the mag you lost it for the rest of the game i guess?
@@ -544,11 +584,29 @@ void AZombieGameCharacter::SpeedReload()
 
 void AZombieGameCharacter::MagCheck()
 {
-	//use currentAmmo to make this come up in the UI
 	//show how many mags are left too?
-	//make it so mag gets taken out and visually inspected? animation or hardcoded values?	
-	int ammoInMag = EquippedWeapon->currentAmmo;
-	
+
+	if (bIsReloading || bIsMagChecking)
+	{
+		return;
+	}
+
+	bIsMagChecking = true;
+
+	ammoInMag = EquippedWeapon->MagCheck();
+	UE_LOG(LogTemp, Warning, TEXT("MagCheck started. Ammo in mag: %d"), ammoInMag);
+
+	if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())
+	{
+		if (magCheckMontage)
+		{
+			AnimInstance->Montage_Play(magCheckMontage, 1.0f);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AZombieGameCharacter::OnMagCheckMontageEnded);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, magCheckMontage);
+		}
+	}
 }
 
 

@@ -22,6 +22,8 @@ AWeapon::AWeapon()
 	PrimaryActorTick.bCanEverTick = true;
 	mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	SetRootComponent(mesh);
+
+    
 }
 
 // Called when the game starts or when spawned
@@ -119,8 +121,6 @@ void AWeapon::Shoot()
     //could either do animation or just use a slide to save time?
     //would mean only need reload and arm animation for shooting
 
-
-
     if (mags.Num() == 0 || currentMagIndex >= mags.Num())
     {
         UE_LOG(LogTemp, Warning, TEXT("No mags available!"));
@@ -132,7 +132,6 @@ void AWeapon::Shoot()
         UE_LOG(LogTemp, Warning, TEXT("Current mag is empty! Reload needed."));
         return;
     }
-
 
     if (!ammunitionType) return;
     if (!mesh) return;
@@ -174,10 +173,6 @@ void AWeapon::Shoot()
     recoilPitch += recoilKick;
     recoilYaw += FMath::RandRange(-recoilShake, recoilShake);
 
-   
-   
-
-
     if (MuzzleFlash && mesh)
     {
         UGameplayStatics::SpawnEmitterAttached(
@@ -191,7 +186,6 @@ void AWeapon::Shoot()
             true
         );
     }
-
 
     //// Play sound if exists
     //if (FireSound)
@@ -218,6 +212,13 @@ void AWeapon::Reload()
             mesh->PlayAnimation(ReloadAnimation, false);
         }
     }
+}
+
+int AWeapon::MagCheck()
+{
+    currentAmmoinMag = mags[currentMagIndex];
+
+    return currentAmmoinMag;
 }
 
 // Called every frame

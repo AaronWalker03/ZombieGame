@@ -47,7 +47,7 @@ public:
 	float RecoilToDegrees = 18.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	int currentAmmo;
+	int currentAmmoinMag;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	int magCapacity = 30;
@@ -72,6 +72,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimationAsset* ReloadEmptyAnimation;   
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimationAsset* InspectAnimation;*/
 
 	bool bBoltLockedOpen = false;
 
@@ -135,5 +138,7 @@ public:
 	// Reload function
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Reload();
+
+	int MagCheck();
 
 };

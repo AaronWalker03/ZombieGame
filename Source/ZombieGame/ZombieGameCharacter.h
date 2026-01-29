@@ -78,6 +78,13 @@ protected:
 
 	USkeletalMeshComponent* FirstPersonMesh;
 
+	void OnReloadMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	void OnMagCheckMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	/*void ReloadHoldStarted();
+	void ReloadHoldSucceeded();
+	void OnReloadKeyReleased();
+
+	FTimerHandle ReloadHoldTimerHandle;*/
 
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -178,10 +185,18 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	USpringArmComponent* Cam_Root;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mag Check")
+	bool bIsMagChecking = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mag Check")
+	int ammoInMag = 0;
 
 	//change this to a list, so can have specific ammo per mag
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mag Count")
 	int magCount = 4;
+
+	UFUNCTION(BlueprintCallable)
+	void MagCheck();
 
 	// Movement tuning
 	float BaseWalkSpeed = 450.f;
@@ -226,7 +241,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* fullReloadMontage;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* magCheckMontage;
 
+	bool bReloadHoldSucceeded = false;
 
 	// Footsteps
 	float FootstepTimer = 0.f;
@@ -310,7 +328,7 @@ protected:
 
 	void SimpleReload();
 	void SpeedReload();
-	void MagCheck();
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TSubclassOf<AWeapon> DefaultWeaponClass;

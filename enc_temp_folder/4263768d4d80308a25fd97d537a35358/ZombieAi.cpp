@@ -49,8 +49,8 @@ void AZombieAi::SetBodyparts()
     RForearm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RForearm"));
     RForearm->SetupAttachment(GetMesh(), FName("lowerarm_r"));
 
-    //LHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LHand"));
-    //LHand->SetupAttachment(GetMesh(), FName("hand_l"));
+    LHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LHand"));
+    LHand->SetupAttachment(GetMesh(), FName("hand_l"));
 
     RUpArm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RUpArm"));
     RUpArm->SetupAttachment(GetMesh(), FName("upperarm_r"));
@@ -58,8 +58,8 @@ void AZombieAi::SetBodyparts()
     LForearm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LForearm"));
     LForearm->SetupAttachment(GetMesh(), FName("lowerarm_l"));
 
-    //RHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RHand"));
-    //RHand->SetupAttachment(GetMesh(), FName("hand_r"));
+    RHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RHand"));
+    RHand->SetupAttachment(GetMesh(), FName("hand_r"));
 
     LThigh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LThigh"));
     LThigh->SetupAttachment(GetMesh(), FName("thigh_l"));
@@ -96,8 +96,8 @@ void AZombieAi::SetBodyparts()
     LForearm->SetStaticMesh(CubeAsset.Object);
     LForearm->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
 
-    //LHand->SetStaticMesh(CubeAsset.Object);
-    //LHand->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+    LHand->SetStaticMesh(CubeAsset.Object);
+    LHand->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
 
     RUpArm->SetStaticMesh(CubeAsset.Object);
     RUpArm->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
@@ -105,8 +105,8 @@ void AZombieAi::SetBodyparts()
     RForearm->SetStaticMesh(CubeAsset.Object);
     RForearm->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
 
-    //RHand->SetStaticMesh(CubeAsset.Object);
-    //RHand->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
+    RHand->SetStaticMesh(CubeAsset.Object);
+    RHand->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
 
     LThigh->SetStaticMesh(CubeAsset.Object);
     LThigh->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));

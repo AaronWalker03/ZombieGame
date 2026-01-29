@@ -12,6 +12,9 @@
 //need to fuck about with accuracy cose barrel length plays with it
 //affects initial velocity and how far it spreads
 
+//implement a method for shotgun shells
+//probably do this in ammunition cpp but need calc ballistics in here for amount of projectiles 
+
 // Sets default values
 AWeapon::AWeapon()
 {
@@ -32,11 +35,15 @@ void AWeapon::BeginPlay()
     float powder = defaultAmmo->powderAmount;
     float grain = defaultAmmo->bulletGrain;
     float diameter = defaultAmmo->bulletDiameterMM;
+    //can add a projectile count for shotgun use
+
 
     CalculateBallistics(powder, grain, diameter);
 
     int MagCount = 4;
 
+    //loop the mag system so can go back to a previous mag even if its empty?
+    //probably move this to character side?
     mags.Empty();
     for (int i = 0; i < MagCount; ++i)
     {
@@ -110,7 +117,7 @@ void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float b
 void AWeapon::Shoot()
 {
     //could either do animation or just use a slide to save time?
-    //would mean only need reload animation and arm animation for shooting
+    //would mean only need reload and arm animation for shooting
 
 
 

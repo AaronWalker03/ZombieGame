@@ -17,6 +17,8 @@ public:
 	// Sets default values for this actor's properties
 	AZombieSpawner();
 
+	void NotifyZombieDied();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -44,8 +46,6 @@ protected:
 	void SpawnWave(int SpawnCount);
 
 	AZombieSpawnPoint* GetClosestSpawnPointToPlayer(APawn* Player);
-
-	void NotifyZombieDied();
 
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	TSubclassOf<AZombieAi> ZombieClass;

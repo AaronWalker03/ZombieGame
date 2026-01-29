@@ -167,14 +167,18 @@ void AZombieSpawner::SpawnZombieNearPlayer(APawn* Player)
     spawnParams.SpawnCollisionHandlingOverride =
         ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-    GetWorld()->SpawnActor<AZombieAi>(
+    AZombieAi* zombie = GetWorld()->SpawnActor<AZombieAi>(
         ZombieClass,
         location,
         rotation,
         spawnParams
     );
 
-    AliveZombies++;
+    if (zombie)
+    {
+        zombie->SetSpawner(this);
+        AliveZombies++;
+    }
 
     //AZombieSpawnPoint* spawnPoint = GetClosestSpawnPointToPlayer();
 

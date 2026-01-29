@@ -35,13 +35,17 @@ protected:
 
 	int RoundNum;
 
-	void SpawnZombie();
+	void SpawnZombieNearPlayer(APawn* PlayerPawn);
 	void StartNewRound();
 	void RoundManager();
 	void GetSpawnPoints();
 	void GetPlayerPawns();
+	void TrySpawnZombies();
+	void SpawnWave(int SpawnCount);
 
-	AZombieSpawnPoint* GetClosestSpawnPointToPlayer();
+	AZombieSpawnPoint* GetClosestSpawnPointToPlayer(APawn* Player);
+
+	void NotifyZombieDied();
 
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	TSubclassOf<AZombieAi> ZombieClass;

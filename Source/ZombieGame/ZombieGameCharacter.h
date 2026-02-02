@@ -80,12 +80,6 @@ protected:
 
 	void OnReloadMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	void OnMagCheckMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-	/*void ReloadHoldStarted();
-	void ReloadHoldSucceeded();
-	void OnReloadKeyReleased();
-
-	FTimerHandle ReloadHoldTimerHandle;*/
-
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* simpleReload;
@@ -140,8 +134,27 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoJumpEnd();
 
+	//these are now the default selectors
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
-	AWeapon* EquippedWeapon;
+	AWeapon* primaryWeapon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	AWeapon* secondaryWeapon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	AWeapon* heldWeapon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<AWeapon> DefaultPrimaryWeapon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<AWeapon> DefaultSecondaryWeapon;
+
+
+	//current weapon held
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	//AWeapon* EquippedMelee;
 
 	/** The player's maximum health. This is the highest value of their health can be. This value is a value of the player's health, which starts at when spawned.*/
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
@@ -160,6 +173,10 @@ public:
 	AZombieGameCharacter();
 
 	void BeginPlay();
+
+	void AttachWeaponToSocket(AWeapon* Weapon, FName SocketName);
+
+	void EquipWeapon(AWeapon* WeaponToEquip);
 
 	UFUNCTION(BlueprintCallable)
 	void SaveCustomisation();
@@ -244,23 +261,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* magCheckMontage;
 
-	bool bReloadHoldSucceeded = false;
-
 	// Footsteps
 	float FootstepTimer = 0.f;
 	float FootstepInterval = 0.45f;
-
-	//UPROPERTY(BlueprintReadOnly)
-	//float LeanAmount;
-
-	//UPROPERTY(BlueprintReadOnly)
-	//FRotator LeanRotation;
-
-	//float MaxLeanAngle = 10.f;   // degrees
-	//float LeanInterpSpeed = 8.f;
-
-
-	// State
 
 
 	float SprintSpeed = 650.f;
@@ -284,7 +287,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Clothes Meshes")
 	USkeletalMeshComponent* faceWear;
 
-	void SpawnWeapon();
+	AWeapon* SpawnWeapon(TSubclassOf<AWeapon> weaponToSpawn);
 
 	UFUNCTION(BlueprintCallable)
 	void ChangeWeapon(TSubclassOf<AWeapon> NewWeaponClass);
@@ -330,11 +333,11 @@ protected:
 	void SpeedReload();
 	
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	TSubclassOf<AWeapon> DefaultWeaponClass;
+	
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
-	UAnimSequence* EquipSequence;
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	UAnimSequence* EquipSequence;*/
 
 
 

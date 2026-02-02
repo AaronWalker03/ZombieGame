@@ -56,6 +56,8 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //add leaning
 
+//make a function so adjust ads and recoil for any equiped weapon
+
 AZombieGameCharacter::AZombieGameCharacter()
 {
 	// Set size for collision capsule
@@ -131,10 +133,8 @@ void AZombieGameCharacter::BeginPlay()
 	FString XPMessage = FString::Printf(TEXT("You now have %d XP"), currentXP);
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, XPMessage);
 
-	SpawnWeapon();
-
-	//make it so that on start each weapon that is equipped runs the ads offset function
-	ADSOffset = EquippedWeapon->weaponADSOffset;
+	primaryWeapon = SpawnWeapon(DefaultPrimaryWeapon);
+	heldWeapon = primaryWeapon;
 }
 
 void AZombieGameCharacter::Tick(float DeltaTime)
@@ -146,24 +146,26 @@ void AZombieGameCharacter::Tick(float DeltaTime)
 	UpdateWalkAnimation(DeltaTime);
 	UpdateADS(DeltaTime);
 	
-	if (EquippedWeapon)
+
+	//change recoil to a function
+	if (heldWeapon)
 	{
-		float pitchStep = EquippedWeapon->recoilPitch * DeltaTime * 20.0f;
-		float yawStep = EquippedWeapon->recoilYaw * DeltaTime * 20.0f;
+		float pitchStep = heldWeapon->recoilPitch * DeltaTime * 20.0f;
+		float yawStep = heldWeapon->recoilYaw * DeltaTime * 20.0f;
 
 		AddControllerPitchInput(-pitchStep);
 		AddControllerYawInput(yawStep);
 
-		EquippedWeapon->recoilPitch -= pitchStep;
-		EquippedWeapon->recoilYaw -= yawStep;
+		heldWeapon->recoilPitch -= pitchStep;
+		heldWeapon->recoilYaw -= yawStep;
 
-		EquippedWeapon->recoilPitch = FMath::FInterpTo(
-			EquippedWeapon->recoilPitch, 0.f, DeltaTime,
-			EquippedWeapon->recoilRecoverySpeed);
+		heldWeapon->recoilPitch = FMath::FInterpTo(
+			heldWeapon->recoilPitch, 0.f, DeltaTime,
+			heldWeapon->recoilRecoverySpeed);
 
-		EquippedWeapon->recoilYaw = FMath::FInterpTo(
-			EquippedWeapon->recoilYaw, 0.f, DeltaTime,
-			EquippedWeapon->recoilRecoverySpeed);
+		heldWeapon->recoilYaw = FMath::FInterpTo(
+			heldWeapon->recoilYaw, 0.f, DeltaTime,
+			heldWeapon->recoilRecoverySpeed);
 	}
 	 
 }
@@ -180,7 +182,9 @@ void AZombieGameCharacter::SaveCustomisation()
 	SaveObj->tshirtWearMesh = tshirtWear->GetSkeletalMeshAsset();
 	SaveObj->jacketWearMesh = jacketWear->GetSkeletalMeshAsset();
 	SaveObj->faceWearMesh = faceWear->GetSkeletalMeshAsset();
-	SaveObj->weaponClass = EquippedWeapon->GetClass();
+
+	//change for different weapons
+	SaveObj->weaponClass = primaryWeapon->GetClass();
 
 	UGameplayStatics::SaveGameToSlot(SaveObj, TEXT("PlayerCustomisation"), 0);
 }
@@ -199,7 +203,7 @@ void AZombieGameCharacter::LoadCustomisation()
 		tshirtWear->SetSkeletalMesh(SaveObj->tshirtWearMesh.LoadSynchronous());
 		jacketWear->SetSkeletalMesh(SaveObj->jacketWearMesh.LoadSynchronous());
 		faceWear->SetSkeletalMesh(SaveObj->faceWearMesh.LoadSynchronous());
-		DefaultWeaponClass = SaveObj->weaponClass.Get();
+		DefaultPrimaryWeapon = SaveObj->weaponClass.Get();
 		currentXP = SaveObj->currentXP;
 	}
 }
@@ -336,7 +340,7 @@ void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 
 	DOREPLIFETIME(AZombieGameCharacter, PlayerCustomisation);
 	DOREPLIFETIME(AZombieGameCharacter, CurrentHealth);
-	DOREPLIFETIME(AZombieGameCharacter, bIsSprinting);
+	//DOREPLIFETIME(AZombieGameCharacter, bIsSprinting);
 }
 
 void AZombieGameCharacter::AddXP(int amount)
@@ -351,55 +355,116 @@ void AZombieGameCharacter::AddXP(int amount)
 	UGameplayStatics::SaveGameToSlot(SaveObj, TEXT("PlayerCustomisation"), 0);
 }
 
-void AZombieGameCharacter::SpawnWeapon()
+
+
+//change this so that weapons can spawn accordingly
+//make different sockets for each weapon
+//then prioritise main gun switching to hand on start
+//each weapon will be changed to be on weapon socket 
+
+//add params?
+AWeapon* AZombieGameCharacter::SpawnWeapon(TSubclassOf<AWeapon> weaponToSpawn)
 {
-	// maybe make it so that the hand attaches to the front grip too?? not sure if sockets would allow that tho
 
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = GetInstigator();
 
-	if (!EquippedWeapon && DefaultWeaponClass)
+	AWeapon* weapon = GetWorld()->SpawnActor<AWeapon>(
+		weaponToSpawn,
+		FVector::ZeroVector,
+		FRotator::ZeroRotator,
+		SpawnParams
+	);
+
+	weapon->mesh->SetCastShadow(false);
+
+	switch (weapon->HolsterType)
 	{
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
-		SpawnParams.Instigator = GetInstigator();
+	case EWeaponHolsterType::Primary:
+		AttachWeaponToSocket(weapon, "BackSocket");
+		primaryWeapon = weapon;
+		break;
 
-		// Spawn the new weapon
-		AWeapon* MyWeapon = GetWorld()->SpawnActor<AWeapon>(
-			DefaultWeaponClass,
-			FVector::ZeroVector,
-			FRotator::ZeroRotator,
-			SpawnParams
-		);
-
-		if (MyWeapon && FirstPersonMesh)
-		{
-			MyWeapon->AttachToComponent(
-				FirstPersonMesh,
-				FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-				FName("WeaponSocket")
-			);
-
-			EquippedWeapon = MyWeapon;
-			EquippedWeapon->mesh->SetCastShadow(false);
-		}
+	case EWeaponHolsterType::Secondary:
+		AttachWeaponToSocket(weapon, "HipSocket");
+		secondaryWeapon = weapon;
+		break;
 	}
+
+	return weapon;
 }
 
+
+//gona have to change animation stuff in anim bp
+void AZombieGameCharacter::AttachWeaponToSocket(AWeapon* Weapon, FName SocketName)
+{
+	Weapon->AttachToComponent(
+		FirstPersonMesh,
+		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+		SocketName
+	);
+}
+
+//if no main gun only spawn whatevers available
+void AZombieGameCharacter::EquipWeapon(AWeapon* WeaponToEquip)
+{
+	if (heldWeapon)
+	{
+		switch (heldWeapon->HolsterType)
+		{
+		case EWeaponHolsterType::Primary:
+			AttachWeaponToSocket(heldWeapon, "BackSocket");
+			break;
+
+		case EWeaponHolsterType::Secondary:
+			AttachWeaponToSocket(heldWeapon, "HipSocket");
+			break;
+		}
+	}
+
+	// Equip new weapon
+	heldWeapon = WeaponToEquip;
+	AttachWeaponToSocket(heldWeapon, "WeaponSocket");
+
+	// Update ADS
+	ADSOffset = heldWeapon->weaponADSOffset;
+}
+
+//for customisation
+//change params to change what weapon is being changed
 void AZombieGameCharacter::ChangeWeapon(TSubclassOf<AWeapon> NewWeaponClass)
 {
-	if (NewWeaponClass != DefaultWeaponClass)
+	AWeapon* NewWeapon = SpawnWeapon(NewWeaponClass);
+	
+
+	AWeapon* OldWeapon = nullptr;
+
+	switch (NewWeapon->HolsterType)
 	{
-		DefaultWeaponClass = NewWeaponClass;
+	case EWeaponHolsterType::Primary:
+		OldWeapon = primaryWeapon;
+		primaryWeapon = NewWeapon;
+		break;
 
-		if (EquippedWeapon && EquippedWeapon->GetClass() != DefaultWeaponClass)
-		{
-			// Destroy current weapon
-			EquippedWeapon->Destroy();
-			EquippedWeapon = nullptr;
-		}
+	case EWeaponHolsterType::Secondary:
+		OldWeapon = secondaryWeapon;
+		secondaryWeapon = NewWeapon;
+		break;
+	}
 
-		SpawnWeapon();
+	if (heldWeapon == OldWeapon)
+	{
+		EquipWeapon(NewWeapon);
+	}
+
+	if (OldWeapon)
+	{
+		OldWeapon->Destroy();
 	}
 }
+
+//swap weapon once spawned
 
 void AZombieGameCharacter::OnHealthUpdate()
 {
@@ -489,7 +554,7 @@ void AZombieGameCharacter::OnFire()
 {
 	if (!bIsReloading && !bIsMagChecking)
 	{
-		EquippedWeapon->Shoot();
+		//EquippedWeapon->Shoot();
 	}
 }
 
@@ -536,7 +601,7 @@ void AZombieGameCharacter::OnMagCheckMontageEnded(UAnimMontage* Montage, bool bI
 void AZombieGameCharacter::SimpleReload()
 {
 	//add a reload time float so that shooting and other stuff is stopped from running
-	//maybe change mag system to be on the player instead of getting it from the weapon cpp
+	//use player to set amount of mags so that it can be used with UI
 
 	if (bIsReloading || bIsMagChecking)
 	{
@@ -545,7 +610,7 @@ void AZombieGameCharacter::SimpleReload()
 
 	bIsReloading = true;
 
-	if (EquippedWeapon->bBoltLockedOpen)
+	if (heldWeapon->bBoltLockedOpen)
 	{
 		if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())
 		{
@@ -569,7 +634,7 @@ void AZombieGameCharacter::SimpleReload()
 	}
 
 	
-	EquippedWeapon->Reload();
+	heldWeapon->Reload();
 	//keep mag so more ammo can be put into it later
 
 }
@@ -593,7 +658,7 @@ void AZombieGameCharacter::MagCheck()
 
 	bIsMagChecking = true;
 
-	ammoInMag = EquippedWeapon->MagCheck();
+	ammoInMag = heldWeapon->MagCheck();
 	UE_LOG(LogTemp, Warning, TEXT("MagCheck started. Ammo in mag: %d"), ammoInMag);
 
 	if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())

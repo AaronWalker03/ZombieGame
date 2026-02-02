@@ -7,6 +7,14 @@
 #include "Ammunition.h"
 #include "Weapon.generated.h"
 
+
+UENUM(BlueprintType)
+enum class EWeaponHolsterType : uint8
+{
+	Primary,    
+	Secondary   
+};
+
 UCLASS()
 class ZOMBIEGAME_API AWeapon : public AActor
 {
@@ -16,8 +24,16 @@ public:
 	// Sets default values for this actor's properties
 	AWeapon();
 
+	//set a tag to be pistol, long or melee
+
 	UPROPERTY(VisibleAnywhere, Category = "Mesh")
 	USkeletalMeshComponent* mesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	EWeaponHolsterType HolsterType;
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Transform")
+	FRotator MeshRotation = FRotator(0, 0, 0);*/
 
 	float recoilImpulse;          // Newton-seconds
 	float recoilKick;             // degrees of vertical camera rise

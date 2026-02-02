@@ -45,7 +45,7 @@ void AZombieSpawner::RoundManager()
     {
         if (AliveZombies < HordeCap)
         {
-            SpawnZombie();
+           // SpawnZombie();
         }
     }
 }

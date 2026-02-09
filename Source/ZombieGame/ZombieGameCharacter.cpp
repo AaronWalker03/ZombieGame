@@ -32,10 +32,8 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 //could add dismemberent for players? if you get bitten in multiplayer to stay alive longer chop a limb off? 
 //would potentially require new animations tho
 
-//implement reload system and mag check
 //pressing r once slowly reloads while keeping the mag
 //double tap r quick reload but lose the mag, conveniant if you fully empty
-//hold r mag check see how much ammo left
 
 //make multi weapon slot system, melee, pistol, 2 big guns
 //tie this into customisation
@@ -57,6 +55,9 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 //add leaning
 
 //make a function so adjust ads and recoil for any equiped weapon
+
+
+//naming conventions for send/receive save files
 
 AZombieGameCharacter::AZombieGameCharacter()
 {
@@ -134,6 +135,7 @@ void AZombieGameCharacter::BeginPlay()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, XPMessage);
 
 	primaryWeapon = SpawnWeapon(DefaultPrimaryWeapon);
+	EquipWeapon(primaryWeapon);
 	heldWeapon = primaryWeapon;
 }
 
@@ -169,8 +171,6 @@ void AZombieGameCharacter::Tick(float DeltaTime)
 	}
 	 
 }
-
-
 
 void AZombieGameCharacter::SaveCustomisation()
 {
@@ -356,16 +356,14 @@ void AZombieGameCharacter::AddXP(int amount)
 }
 
 
+//make a function to attach to fp mesh or third person mesh 
+//needs to work with camera too
+//and call it in spawn weapon
+//use same method for spawning but add a param for either mesh
+//maybe make it so that it detects from the camera what to do?
 
-//change this so that weapons can spawn accordingly
-//make different sockets for each weapon
-//then prioritise main gun switching to hand on start
-//each weapon will be changed to be on weapon socket 
-
-//add params?
 AWeapon* AZombieGameCharacter::SpawnWeapon(TSubclassOf<AWeapon> weaponToSpawn)
 {
-
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 	SpawnParams.Instigator = GetInstigator();
@@ -378,19 +376,6 @@ AWeapon* AZombieGameCharacter::SpawnWeapon(TSubclassOf<AWeapon> weaponToSpawn)
 	);
 
 	weapon->mesh->SetCastShadow(false);
-
-	switch (weapon->HolsterType)
-	{
-	case EWeaponHolsterType::Primary:
-		AttachWeaponToSocket(weapon, "BackSocket");
-		primaryWeapon = weapon;
-		break;
-
-	case EWeaponHolsterType::Secondary:
-		AttachWeaponToSocket(weapon, "HipSocket");
-		secondaryWeapon = weapon;
-		break;
-	}
 
 	return weapon;
 }
@@ -431,37 +416,26 @@ void AZombieGameCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 	ADSOffset = heldWeapon->weaponADSOffset;
 }
 
-//for customisation
-//change params to change what weapon is being changed
+//not deleting old mesh
+//make it so that it can tell which weapon its destroying instead of hardcoded?
 void AZombieGameCharacter::ChangeWeapon(TSubclassOf<AWeapon> NewWeaponClass)
 {
 	AWeapon* NewWeapon = SpawnWeapon(NewWeaponClass);
-	
 
-	AWeapon* OldWeapon = nullptr;
+	primaryWeapon->Destroy();
 
 	switch (NewWeapon->HolsterType)
 	{
 	case EWeaponHolsterType::Primary:
-		OldWeapon = primaryWeapon;
 		primaryWeapon = NewWeapon;
 		break;
 
 	case EWeaponHolsterType::Secondary:
-		OldWeapon = secondaryWeapon;
 		secondaryWeapon = NewWeapon;
 		break;
 	}
 
-	if (heldWeapon == OldWeapon)
-	{
-		EquipWeapon(NewWeapon);
-	}
-
-	if (OldWeapon)
-	{
-		OldWeapon->Destroy();
-	}
+	EquipWeapon(NewWeapon);
 }
 
 //swap weapon once spawned
@@ -548,13 +522,11 @@ void AZombieGameCharacter::SetupStimulusSource()
 }
 
 //WEAPON ACTIONS
-
-//do this after shower
 void AZombieGameCharacter::OnFire()
 {
 	if (!bIsReloading && !bIsMagChecking)
 	{
-		//EquippedWeapon->Shoot();
+		heldWeapon->Shoot();
 	}
 }
 
@@ -586,7 +558,6 @@ void AZombieGameCharacter::UpdateADS(float DeltaTime)
 	const float NewPPWeight = FMath::Lerp(HipPPWeight, ADSPPWeight, ADSAlpha);
 	FirstPersonCameraComponent->PostProcessBlendWeight = NewPPWeight;
 }
-
 
 void AZombieGameCharacter::OnReloadMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {

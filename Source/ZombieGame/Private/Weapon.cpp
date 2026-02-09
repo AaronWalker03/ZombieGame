@@ -116,8 +116,8 @@ void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float b
 
 void AWeapon::Shoot()
 {
-    //could either do animation or just use a slide to save time?
-    //would mean only need reload and arm animation for shooting
+   //change this when shooting to move the slide and eject a round(use effects for empty shell)
+    //make a function to calculate how much the arms would have to move by, ties into recoil so make new function
 
     if (mags.Num() == 0 || currentMagIndex >= mags.Num())
     {

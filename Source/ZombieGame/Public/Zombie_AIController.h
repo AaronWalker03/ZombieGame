@@ -28,6 +28,9 @@ private:
 	void SetupPerceptionSystem();
 
 	UFUNCTION()
+	void OnPerceptionUpdated(const TArray<AActor*>& updatedActors);
+
+	UFUNCTION()
 	void OnTargetSpotted(AActor* Actor, FAIStimulus const Stimulus);
 
 	UFUNCTION()

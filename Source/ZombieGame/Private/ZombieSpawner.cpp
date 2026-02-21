@@ -41,13 +41,7 @@ void AZombieSpawner::RoundManager()
         return;
     }
 
-    if (NumToSpawn > 0)
-    {
-        if (AliveZombies < HordeCap)
-        {
-            SpawnZombie();
-        }
-    }
+    TrySpawnZombies();
 }
 
 void AZombieSpawner::GetSpawnPoints()

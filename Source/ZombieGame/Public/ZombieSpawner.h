@@ -7,6 +7,7 @@
 #include "ZombieSpawner.generated.h"
 
 class AZombieSpawnPoint;
+class AZombieAi;
 
 UCLASS()
 class ZOMBIEGAME_API AZombieSpawner : public AActor

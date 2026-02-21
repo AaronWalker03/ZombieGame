@@ -318,7 +318,7 @@ void AZombieAi::KillZombie()
     UBehaviorTree* tree = GetBehaviourTree();
     tree->FinishDestroy();
 
-    if (Spawner) Spawner->NotifyZombieDied();
+    //if (Spawner) Spawner->NotifyZombieDied();
 
     // After next round, Destroy actor and components if we want to allow the bodies to pile up. Or just set a timer to Call Destroy actor
 
@@ -361,45 +361,45 @@ void AZombieAi::Tick(float DeltaTime)
 
     // lastKnownPlayerLocation = TargetPlayer->GetActorLocation
 
-    switch (CurrentState)
-    {
-    case EZombieState::ZS_Idle:
-        // Maybe look around or play idle animation
-        break;
+    //switch (CurrentState)
+    //{
+    //case EZombieState::ZS_Idle:
+    //    // Maybe look around or play idle animation
+    //    break;
 
-    case EZombieState::ZS_Wandering:
-        // Move around randomly
+    //case EZombieState::ZS_Wandering:
+    //    // Move around randomly
 
-        //Could make it so that it keeps going to the last known location of the player
-        //roam around for a bit then to the original spawn location?
+    //    //Could make it so that it keeps going to the last known location of the player
+    //    //roam around for a bit then to the original spawn location?
 
-       // AiController->MoveTo = lastKnownPlayerLocation
+    //   // AiController->MoveTo = lastKnownPlayerLocation
 
-        //once at location roam around like a fent addict
-      
+    //    //once at location roam around like a fent addict
+    //  
 
-        break;
+    //    break;
 
-    case EZombieState::ZS_Attack:
-        if (TargetPlayer)
-        {
-            float DistanceToPlayer = FVector::Dist(GetActorLocation(), TargetPlayer->GetActorLocation());
+    //case EZombieState::ZS_Attack:
+    //    if (TargetPlayer)
+    //    {
+    //        float DistanceToPlayer = FVector::Dist(GetActorLocation(), TargetPlayer->GetActorLocation());
 
-            // If too far, stop chasing
-            if (DistanceToPlayer > 1500.0f) // add variable for the range 
-            {
-                TargetPlayer = nullptr;
-                CurrentState = EZombieState::ZS_Wandering;
+    //        // If too far, stop chasing
+    //        if (DistanceToPlayer > 1500.0f) // add variable for the range 
+    //        {
+    //            TargetPlayer = nullptr;
+    //            CurrentState = EZombieState::ZS_Wandering;
 
-                AAIController* AIController = Cast<AAIController>(GetController());
-                if (AIController)
-                {
-                    AIController->StopMovement();
-                }
-            }
-        }
-        break;
-    }
+    //            AAIController* AIController = Cast<AAIController>(GetController());
+    //            if (AIController)
+    //            {
+    //                AIController->StopMovement();
+    //            }
+    //        }
+    //    }
+    //    break;
+    //}
 
     if (pawnSensingComp)
     {
@@ -421,7 +421,7 @@ void AZombieAi::Tick(float DeltaTime)
 
     if (CurrentHealth || bloodQuantity <= 0.0f)
     {
-        KillZombie();
+        //KillZombie();
     }
 
     // May need to add in a check here for if the zombie has both legs blown off for changing movement state to crawling or something along those lines
@@ -445,6 +445,5 @@ void AZombieAi::HandleSeePlayer(APawn* Player)
     OnSeePlayer(Player);
     AttackPlayer(Player);
     CurrentState = EZombieState::ZS_Attack;
-
 
 }

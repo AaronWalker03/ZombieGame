@@ -28,11 +28,21 @@ EBTNodeResult::Type UBTTask_FindRandomLocation::ExecuteTask(UBehaviorTreeCompone
 				if (NavSys->GetRandomPointInNavigableRadius(Origin, SearchRadius, Location))
 				{
 					OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), Location.Location);
+
+					// Finish this task successfully
+					FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+
+					// Rest of sequence still in progress
+					return EBTNodeResult::InProgress;
 				}
 
 				// finish with success
-				FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-				return EBTNodeResult::Succeeded;
+
+				/*if (Zombie->GetActorLocation() == Location)
+				{
+					FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+					return EBTNodeResult::Succeeded;
+				}*/
 			}
 		}
 	}

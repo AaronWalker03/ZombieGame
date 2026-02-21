@@ -26,17 +26,23 @@ void AZombie_AIController::OnPossess(APawn* InPawn)
 			UseBlackboard(tree->BlackboardAsset, b);
 			Blackboard = b;
 			RunBehaviorTree(tree);
+
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("POSSESS CALLED"));
+			}
 		}
 	}
 }
 
 void AZombie_AIController::SetupPerceptionSystem()
 {
-	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
-	HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("Hearing Config"));
+	PerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent"));
+	SetPerceptionComponent(*PerceptionComponent);
 
 	if (SightConfig)
 	{
+		SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
 		SightConfig->SightRadius = 500.0f;
 		SightConfig->LoseSightRadius = SightConfig->SightRadius + 25.0f;
 		SightConfig->PeripheralVisionAngleDegrees = 90.0f;
@@ -50,6 +56,7 @@ void AZombie_AIController::SetupPerceptionSystem()
 
 	if (HearingConfig)
 	{
+		HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("Hearing Config"));
 		HearingConfig->HearingRange = 700.0f;
 		HearingConfig->SetMaxAge(15.0f);
 
@@ -58,7 +65,15 @@ void AZombie_AIController::SetupPerceptionSystem()
 		HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	}
 
-	if (SightConfig && HearingConfig)
+	// Register senses
+	PerceptionComponent->ConfigureSense(*SightConfig);
+	PerceptionComponent->ConfigureSense(*HearingConfig);
+
+	PerceptionComponent->SetDominantSense(UAISense_Sight::StaticClass());
+
+	PerceptionComponent->OnPerceptionUpdated.AddDynamic(this, &AZombie_AIController::OnPerceptionUpdated);
+
+	/*if (SightConfig && HearingConfig)
 	{
 		SetPerceptionComponent(*CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("Perception Component")));
 
@@ -68,6 +83,41 @@ void AZombie_AIController::SetupPerceptionSystem()
 
 		GetPerceptionComponent()->OnTargetPerceptionUpdated.AddDynamic(this, &AZombie_AIController::OnTargetHeard);
 		GetPerceptionComponent()->ConfigureSense(*HearingConfig);
+	}*/
+}
+
+void AZombie_AIController::OnPerceptionUpdated(const TArray<AActor*>& updatedActors)
+{
+	bool bCanSeePlayer = false;
+	AZombieGameCharacter* SeenPlayer = nullptr;
+
+	for (AActor* Actor : updatedActors)
+	{
+		if (AZombieGameCharacter* Player = Cast<AZombieGameCharacter>(Actor))
+		{
+			FActorPerceptionBlueprintInfo Info;
+			GetPerceptionComponent()->GetActorsPerception(Player, Info);
+
+			for (const FAIStimulus& Stimulus : Info.LastSensedStimuli)
+			{
+				if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
+				{
+					bCanSeePlayer = Stimulus.WasSuccessfullySensed();
+					SeenPlayer = Player;
+				}
+			}
+		}
+	}
+
+	// ONLY write if value actually changed
+	if (GetBlackboardComponent()->GetValueAsBool("PlayerVisible") != bCanSeePlayer)
+	{
+		GetBlackboardComponent()->SetValueAsBool("PlayerVisible", bCanSeePlayer);
+	}
+
+	if (bCanSeePlayer)
+	{
+		GetBlackboardComponent()->SetValueAsObject("TargetPlayer", SeenPlayer);
 	}
 }
 

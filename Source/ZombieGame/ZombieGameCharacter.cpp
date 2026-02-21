@@ -95,6 +95,9 @@ AZombieGameCharacter::AZombieGameCharacter()
 	GetMesh()->SetOwnerNoSee(true);
 	GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
 
+	GetMesh()->HideBoneByName(TEXT("upperarm_l"), EPhysBodyOp::PBO_None);
+	GetMesh()->HideBoneByName(TEXT("upperarm_r"), EPhysBodyOp::PBO_None);
+
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
 
@@ -137,6 +140,9 @@ void AZombieGameCharacter::BeginPlay()
 	primaryWeapon = SpawnWeapon(DefaultPrimaryWeapon);
 	EquipWeapon(primaryWeapon);
 	heldWeapon = primaryWeapon;
+
+	GetMesh()->HideBoneByName(TEXT("upperarm_l"), EPhysBodyOp::PBO_None);
+	GetMesh()->HideBoneByName(TEXT("upperarm_r"), EPhysBodyOp::PBO_None);
 }
 
 void AZombieGameCharacter::Tick(float DeltaTime)
@@ -356,11 +362,6 @@ void AZombieGameCharacter::AddXP(int amount)
 }
 
 
-//make a function to attach to fp mesh or third person mesh 
-//needs to work with camera too
-//and call it in spawn weapon
-//use same method for spawning but add a param for either mesh
-//maybe make it so that it detects from the camera what to do?
 
 AWeapon* AZombieGameCharacter::SpawnWeapon(TSubclassOf<AWeapon> weaponToSpawn)
 {

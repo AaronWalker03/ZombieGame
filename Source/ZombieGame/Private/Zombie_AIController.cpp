@@ -31,6 +31,11 @@ void AZombie_AIController::OnPossess(APawn* InPawn)
 			{
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("POSSESS CALLED"));
 			}
+
+			GetBlackboardComponent()->SetValueAsVector(
+				TEXT("TargetLocation"),
+				GetPawn()->GetActorLocation() - FVector(400, 0, 0)
+			);
 		}
 	}
 }

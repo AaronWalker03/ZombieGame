@@ -110,6 +110,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* AimAction;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* SwitchPrimaryAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* SwitchSecondaryAction;
+
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
 	class UInputAction* LookAction;
@@ -261,6 +267,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* magCheckMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	bool isHoldingPrimary = true;
+
 	// Footsteps
 	float FootstepTimer = 0.f;
 	float FootstepInterval = 0.45f;
@@ -268,6 +277,8 @@ public:
 
 	float SprintSpeed = 650.f;
 	float SpeedInterpRate = 8.f;
+
+
 
 
 	//call save file and get meshes saved
@@ -332,6 +343,8 @@ protected:
 	void SimpleReload();
 	void SpeedReload();
 	
+	void SwitchToPrimary();
+	void SwitchToSecondary();
 
 	
 

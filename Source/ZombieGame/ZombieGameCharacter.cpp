@@ -59,6 +59,10 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //naming conventions for send/receive save files
 
+
+//might need make a method to attach left arm to weapon depending on grip (wihout affecting current attachment on right hand)
+//do this through anim bp?
+
 AZombieGameCharacter::AZombieGameCharacter()
 {
 	// Set size for collision capsule
@@ -132,7 +136,7 @@ void AZombieGameCharacter::BeginPlay()
 		GetDefaultSubobjectByName(TEXT("FirstPersonMesh"))
 	);
 
-	LoadCustomisation();
+	//LoadCustomisation();
 
 	FString XPMessage = FString::Printf(TEXT("You now have %d XP"), currentXP);
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, XPMessage);
@@ -140,6 +144,9 @@ void AZombieGameCharacter::BeginPlay()
 	primaryWeapon = SpawnWeapon(DefaultPrimaryWeapon);
 	EquipWeapon(primaryWeapon);
 	heldWeapon = primaryWeapon;
+
+	secondaryWeapon = SpawnWeapon(DefaultSecondaryWeapon);
+	EquipWeapon(secondaryWeapon);
 
 	GetMesh()->HideBoneByName(TEXT("upperarm_l"), EPhysBodyOp::PBO_None);
 	GetMesh()->HideBoneByName(TEXT("upperarm_r"), EPhysBodyOp::PBO_None);
@@ -344,9 +351,15 @@ void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AZombieGameCharacter, PlayerCustomisation);
+//	DOREPLIFETIME(AZombieGameCharacter, PlayerCustomisation);
 	DOREPLIFETIME(AZombieGameCharacter, CurrentHealth);
 	//DOREPLIFETIME(AZombieGameCharacter, bIsSprinting);
+
+
+	//player shoots and sends
+	//apply impacts too
+	//later different materials get added
+
 }
 
 void AZombieGameCharacter::AddXP(int amount)
@@ -401,10 +414,12 @@ void AZombieGameCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 		{
 		case EWeaponHolsterType::Primary:
 			AttachWeaponToSocket(heldWeapon, "BackSocket");
+			isHoldingPrimary = false;
 			break;
 
 		case EWeaponHolsterType::Secondary:
 			AttachWeaponToSocket(heldWeapon, "HipSocket");
+			isHoldingPrimary = true;
 			break;
 		}
 	}
@@ -415,6 +430,16 @@ void AZombieGameCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 
 	// Update ADS
 	ADSOffset = heldWeapon->weaponADSOffset;
+}
+
+void AZombieGameCharacter::SwitchToPrimary()
+{
+	EquipWeapon(primaryWeapon);
+}
+
+void AZombieGameCharacter::SwitchToSecondary()
+{
+	EquipWeapon(secondaryWeapon);
 }
 
 //not deleting old mesh
@@ -498,6 +523,9 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(sprintingAction, ETriggerEvent::Started, this, &AZombieGameCharacter::StartSprint);
 		EnhancedInputComponent->BindAction(sprintingAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopSprint);
 
+		EnhancedInputComponent->BindAction(SwitchPrimaryAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::SwitchToPrimary);
+		EnhancedInputComponent->BindAction(SwitchSecondaryAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::SwitchToSecondary);
+
 		//EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::OnFire);
 
 	}
@@ -523,6 +551,7 @@ void AZombieGameCharacter::SetupStimulusSource()
 }
 
 //WEAPON ACTIONS
+//add networking to this
 void AZombieGameCharacter::OnFire()
 {
 	if (!bIsReloading && !bIsMagChecking)
@@ -574,6 +603,9 @@ void AZombieGameCharacter::SimpleReload()
 {
 	//add a reload time float so that shooting and other stuff is stopped from running
 	//use player to set amount of mags so that it can be used with UI
+
+
+	//implement different reloads based on primary or secondary
 
 	if (bIsReloading || bIsMagChecking)
 	{

@@ -94,6 +94,9 @@ protected:
 	UInputAction* sprintingAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* fireMode;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* crouchAction;
 
 	/** Jump Input Action */
@@ -180,7 +183,7 @@ public:
 
 	void BeginPlay();
 
-	void AttachWeaponToSocket(AWeapon* Weapon, FName SocketName);
+	void AttachWeaponToSocket(AWeapon* Weapon, FName SocketName, bool isOnFPMesh);
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
 
@@ -195,6 +198,7 @@ public:
 
 	bool bIsAiming = false;
 	bool bIsReloading = false;
+	bool fullAuto = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USceneComponent* FP_Root;
@@ -259,13 +263,22 @@ public:
 	FVector ADSOffset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* ReloadMontage;
+	UAnimMontage* ArReloadMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* fullReloadMontage;
+	UAnimMontage* arFullReloadMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* arMagCheckMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* pistolReloadMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* pistolFullReloadMontage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* magCheckMontage;
+	UAnimMontage* pistolMagCheckMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	bool isHoldingPrimary = true;
@@ -278,6 +291,12 @@ public:
 	float SprintSpeed = 650.f;
 	float SpeedInterpRate = 8.f;
 
+	bool bIsFiring = false;
+
+	FTimerHandle AutoFireTimer;
+
+	UPROPERTY(EditDefaultsOnly)
+	float FireRate = 0.1f; // 600 RPM approx
 
 
 
@@ -336,9 +355,13 @@ protected:
 	void UpdateADS(float DeltaTime);
 
 	void OnFire();
+	void AutoFire();
+	void StopFiring();
 	
 	void StartAim();
 	void StopAim();
+
+	void SwitchFireMode();
 
 	void SimpleReload();
 	void SpeedReload();

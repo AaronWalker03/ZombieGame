@@ -21,6 +21,10 @@ public:
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
 
+	virtual void BeginPlay() override;
+
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
 private:
 	class UAISenseConfig_Sight* SightConfig;
 	class UAISenseConfig_Hearing* HearingConfig;
@@ -35,4 +39,11 @@ private:
 
 	UFUNCTION()
 	void OnTargetHeard(AActor* Actor, FAIStimulus const Stimulus);
+
+	UFUNCTION()
+	void TrySetInitialTarget();
+
+	FTimerHandle TargetRetryHandle;
+
+	bool bTestedMove = false;
 };

@@ -8,6 +8,10 @@
 #include "Perception/AISenseConfig_Hearing.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "ZombieGameCharacter.h"
+#include "Kismet/GameplayStatics.h"
+#include "Navigation/PathFollowingComponent.h"
+#include "NavigationSystem.h"
+#include "NavigationPath.h"
 
 AZombie_AIController::AZombie_AIController(FObjectInitializer const& ObjectInitializer)
 {
@@ -36,7 +40,107 @@ void AZombie_AIController::OnPossess(APawn* InPawn)
 				TEXT("TargetLocation"),
 				GetPawn()->GetActorLocation() - FVector(400, 0, 0)
 			);
+
+			GetWorld()->GetTimerManager().SetTimer(
+				TargetRetryHandle,
+				this,
+				&AZombie_AIController::TrySetInitialTarget,
+				0.5f,   // check every half second
+				true
+			);
 		}
+	}
+}
+
+void AZombie_AIController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	UNavigationSystemV1* NavSys =
+		FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+
+	if (!NavSys)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NO NAV SYSTEM"));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("NAV SYSTEM OK"));
+	}
+
+	UNavigationPath* Path = UNavigationSystemV1::FindPathToLocationSynchronously(
+		GetWorld(),
+		GetPawn()->GetActorLocation(),
+		GetPawn()->GetActorLocation() + FVector(300, 0, 0)
+	);
+
+	if (!Path || Path->PathPoints.Num() == 0)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NO VALID PATH"));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("PATH VALID"));
+	}
+	//MoveToLocation(GetPawn()->GetActorLocation() + FVector(300, 0, 0));
+}
+
+void AZombie_AIController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (!bTestedMove)
+	{
+		bTestedMove = true;
+		EPathFollowingRequestResult::Type Result = MoveToLocation(GetPawn()->GetActorLocation() + FVector(800, 0, 0));
+
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			5.f,
+			FColor::Yellow,
+			FString::Printf(TEXT("Move result: %d"), (int)Result)
+		);
+	}
+
+	if (GetMoveStatus() == EPathFollowingStatus::Idle)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("MOVE IDLE"));
+	}
+
+	if (!GetPawn())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("NO PAWN"));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, TEXT("HAS PAWN"));
+	}
+
+	if (GetPawn())
+	{
+		UNavMovementComponent* NavMove = GetPawn()->FindComponentByClass<UNavMovementComponent>();
+
+		if (!NavMove)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("NO NAV MOVEMENT COMPONENT"));
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, TEXT("HAS NAV MOVEMENT"));
+		}
+	}
+}
+
+void AZombie_AIController::TrySetInitialTarget()
+{
+	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+
+	if (PlayerPawn && GetBlackboardComponent())
+	{
+		GetBlackboardComponent()->SetValueAsObject(TEXT("TargetPlayer"), PlayerPawn);
+
+		// Stop trying once found
+		GetWorld()->GetTimerManager().ClearTimer(TargetRetryHandle);
 	}
 }
 

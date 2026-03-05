@@ -153,8 +153,8 @@ void AZombieAi::BeginPlay()
 {
     Super::BeginPlay();
 
-    pawnSensingComp->SensingInterval = 0.5f;
-    pawnSensingComp->bSeePawns = true;
+    /*pawnSensingComp->SensingInterval = 0.5f;
+    pawnSensingComp->bSeePawns = true;*/
 
     // Default stats
     movementSpeed = 150.f;
@@ -173,6 +173,15 @@ void AZombieAi::BeginPlay()
     if (pawnSensingComp)
     {
         pawnSensingComp->OnSeePawn.AddDynamic(this, &AZombieAi::HandleSeePlayer);
+    }
+
+    if (!GetCharacterMovement())
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("NO Movement Component"));
+    }
+    else
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, TEXT("HAS Movement Component"));
     }
 }
 

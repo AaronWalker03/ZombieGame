@@ -59,6 +59,10 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //naming conventions for send/receive save files
 
+
+//might need make a method to attach left arm to weapon depending on grip (wihout affecting current attachment on right hand)
+//do this through anim bp?
+
 AZombieGameCharacter::AZombieGameCharacter()
 {
 	// Set size for collision capsule
@@ -132,13 +136,17 @@ void AZombieGameCharacter::BeginPlay()
 		GetDefaultSubobjectByName(TEXT("FirstPersonMesh"))
 	);
 
-	LoadCustomisation();
+	//LoadCustomisation();
 
 	FString XPMessage = FString::Printf(TEXT("You now have %d XP"), currentXP);
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, XPMessage);
 
+	secondaryWeapon = SpawnWeapon(DefaultSecondaryWeapon);
+	EquipWeapon(secondaryWeapon);
+
 	primaryWeapon = SpawnWeapon(DefaultPrimaryWeapon);
 	EquipWeapon(primaryWeapon);
+
 	heldWeapon = primaryWeapon;
 
 	GetMesh()->HideBoneByName(TEXT("upperarm_l"), EPhysBodyOp::PBO_None);
@@ -344,9 +352,15 @@ void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AZombieGameCharacter, PlayerCustomisation);
+//	DOREPLIFETIME(AZombieGameCharacter, PlayerCustomisation);
 	DOREPLIFETIME(AZombieGameCharacter, CurrentHealth);
 	//DOREPLIFETIME(AZombieGameCharacter, bIsSprinting);
+
+
+	//player shoots and sends
+	//apply impacts too
+	//later different materials get added
+
 }
 
 void AZombieGameCharacter::AddXP(int amount)
@@ -383,16 +397,26 @@ AWeapon* AZombieGameCharacter::SpawnWeapon(TSubclassOf<AWeapon> weaponToSpawn)
 
 
 //gona have to change animation stuff in anim bp
-void AZombieGameCharacter::AttachWeaponToSocket(AWeapon* Weapon, FName SocketName)
+void AZombieGameCharacter::AttachWeaponToSocket(AWeapon* Weapon, FName SocketName, bool isOnFPMesh)
 {
-	Weapon->AttachToComponent(
-		FirstPersonMesh,
-		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-		SocketName
-	);
+	if (isOnFPMesh)
+	{
+		Weapon->AttachToComponent(
+			FirstPersonMesh,
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+			SocketName
+		);
+	}
+	else
+	{
+		Weapon->AttachToComponent(
+			GetMesh(),
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+			SocketName
+		);
+	}
 }
 
-//if no main gun only spawn whatevers available
 void AZombieGameCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (heldWeapon)
@@ -400,25 +424,42 @@ void AZombieGameCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 		switch (heldWeapon->HolsterType)
 		{
 		case EWeaponHolsterType::Primary:
-			AttachWeaponToSocket(heldWeapon, "BackSocket");
+			AttachWeaponToSocket(heldWeapon, "BackSocket", false);
+			isHoldingPrimary = false;
 			break;
 
 		case EWeaponHolsterType::Secondary:
-			AttachWeaponToSocket(heldWeapon, "HipSocket");
+			AttachWeaponToSocket(heldWeapon, "HipSocket", false);
+			isHoldingPrimary = true;
 			break;
 		}
 	}
 
-	// Equip new weapon
-	heldWeapon = WeaponToEquip;
-	AttachWeaponToSocket(heldWeapon, "WeaponSocket");
-
+	if (heldWeapon != primaryWeapon)
+	{
+		heldWeapon = WeaponToEquip;
+		AttachWeaponToSocket(heldWeapon, "HKSocket", true);
+	}
+	else if (heldWeapon != secondaryWeapon)
+	{
+		heldWeapon = WeaponToEquip;
+		AttachWeaponToSocket(heldWeapon, "WeaponSocket", true);
+	}
+	
 	// Update ADS
 	ADSOffset = heldWeapon->weaponADSOffset;
 }
 
-//not deleting old mesh
-//make it so that it can tell which weapon its destroying instead of hardcoded?
+void AZombieGameCharacter::SwitchToPrimary()
+{
+	EquipWeapon(primaryWeapon);
+}
+
+void AZombieGameCharacter::SwitchToSecondary()
+{
+	EquipWeapon(secondaryWeapon);
+}
+
 void AZombieGameCharacter::ChangeWeapon(TSubclassOf<AWeapon> NewWeaponClass)
 {
 	AWeapon* NewWeapon = SpawnWeapon(NewWeaponClass);
@@ -438,8 +479,6 @@ void AZombieGameCharacter::ChangeWeapon(TSubclassOf<AWeapon> NewWeaponClass)
 
 	EquipWeapon(NewWeapon);
 }
-
-//swap weapon once spawned
 
 void AZombieGameCharacter::OnHealthUpdate()
 {
@@ -495,19 +534,24 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		//EnhancedInputComponent->BindAction(speedReload, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SpeedReload);
 		
 
+		EnhancedInputComponent->BindAction(fireMode, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SwitchFireMode);
+
 		EnhancedInputComponent->BindAction(sprintingAction, ETriggerEvent::Started, this, &AZombieGameCharacter::StartSprint);
 		EnhancedInputComponent->BindAction(sprintingAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopSprint);
 
-		//EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::OnFire);
+		EnhancedInputComponent->BindAction(SwitchPrimaryAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SwitchToPrimary);
+		EnhancedInputComponent->BindAction(SwitchSecondaryAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::SwitchToSecondary);
+
+		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &AZombieGameCharacter::OnFire);
+		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopFiring);
 
 	}
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
-
 	// Handle firing projectiles
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AZombieGameCharacter::OnFire);
+	//PlayerInputComponent->BindAction("Fire", IE_, this, &AZombieGameCharacter::OnFire);
 }
 
 void AZombieGameCharacter::SetupStimulusSource()
@@ -523,12 +567,39 @@ void AZombieGameCharacter::SetupStimulusSource()
 }
 
 //WEAPON ACTIONS
+//add networking to this
 void AZombieGameCharacter::OnFire()
 {
 	if (!bIsReloading && !bIsMagChecking)
 	{
-		heldWeapon->Shoot();
+		if (fullAuto)
+		{
+			bIsFiring = true;
+
+			GetWorldTimerManager().SetTimer(
+				AutoFireTimer,
+				this,
+				&AZombieGameCharacter::AutoFire,
+				FireRate,
+				true
+			);
+		}
+		else
+		{
+			heldWeapon->Shoot();
+		}
 	}
+}
+
+void AZombieGameCharacter::AutoFire()
+{
+	heldWeapon->Shoot();
+}
+
+void AZombieGameCharacter::StopFiring()
+{
+	bIsFiring = false;
+	GetWorldTimerManager().ClearTimer(AutoFireTimer);
 }
 
 void AZombieGameCharacter::StartAim()
@@ -542,6 +613,17 @@ void AZombieGameCharacter::StartAim()
 void AZombieGameCharacter::StopAim()
 {
 	bIsAiming = false;
+}
+
+void AZombieGameCharacter::SwitchFireMode()
+{
+	fullAuto = !fullAuto;
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,
+			fullAuto ? TEXT("Full Auto") : TEXT("Semi Auto"));
+	}
 }
 
 void AZombieGameCharacter::UpdateADS(float DeltaTime)
@@ -575,6 +657,12 @@ void AZombieGameCharacter::SimpleReload()
 	//add a reload time float so that shooting and other stuff is stopped from running
 	//use player to set amount of mags so that it can be used with UI
 
+
+	//implement different reloads based on primary or secondary
+
+
+	//make a system that uses a list of different animations then changes current reload (avoids if statements)
+
 	if (bIsReloading || bIsMagChecking)
 	{
 		return;
@@ -586,29 +674,48 @@ void AZombieGameCharacter::SimpleReload()
 	{
 		if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())
 		{
-			AnimInstance->Montage_Play(fullReloadMontage, 1.2f);
+			UAnimMontage* animToplay = nullptr;
+
+			if (heldWeapon == primaryWeapon)
+			{
+				animToplay = arFullReloadMontage;
+			}
+			if (heldWeapon == secondaryWeapon)
+			{
+				animToplay = pistolFullReloadMontage;
+			}
+			
+			AnimInstance->Montage_Play(animToplay, 1.2f);
 
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AZombieGameCharacter::OnReloadMontageEnded);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, fullReloadMontage);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, animToplay);
 		}
 	}
 	else
 	{
 		if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())
 		{
-			AnimInstance->Montage_Play(ReloadMontage, 1.2f);
+			UAnimMontage* animToplay = nullptr;
 
+			if (heldWeapon == primaryWeapon)
+			{
+				animToplay = ArReloadMontage;
+			}
+			if (heldWeapon == secondaryWeapon)
+			{
+				animToplay = pistolReloadMontage;
+			}
+
+			AnimInstance->Montage_Play(animToplay, 1.2f);
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AZombieGameCharacter::OnReloadMontageEnded);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, ReloadMontage);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, animToplay);
 		}
 	}
 
-	
 	heldWeapon->Reload();
 	//keep mag so more ammo can be put into it later
-
 }
 
 //do the same as simple reload but faster and lose mag
@@ -630,19 +737,24 @@ void AZombieGameCharacter::MagCheck()
 
 	bIsMagChecking = true;
 
-	ammoInMag = heldWeapon->MagCheck();
-	UE_LOG(LogTemp, Warning, TEXT("MagCheck started. Ammo in mag: %d"), ammoInMag);
-
 	if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())
 	{
-		if (magCheckMontage)
-		{
-			AnimInstance->Montage_Play(magCheckMontage, 1.0f);
+		UAnimMontage* animToplay = nullptr;
 
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AZombieGameCharacter::OnMagCheckMontageEnded);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, magCheckMontage);
+		if (heldWeapon == primaryWeapon)
+		{
+			animToplay = arMagCheckMontage;
 		}
+		if (heldWeapon == secondaryWeapon)
+		{
+			animToplay = pistolMagCheckMontage;
+		}
+
+		AnimInstance->Montage_Play(animToplay, 1.0f);
+
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &AZombieGameCharacter::OnMagCheckMontageEnded);
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, animToplay);
 	}
 }
 

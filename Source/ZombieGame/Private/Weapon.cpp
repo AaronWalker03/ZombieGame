@@ -109,7 +109,7 @@ void AWeapon::CalculateBallistics(float powderAmount, float bulletGrain, float b
 
     // Convert to gameplay camera degrees
     recoilKick = angularRecoil * RecoilToDegrees;
-    recoilShake = angularRecoil * RecoilToDegrees * 0.55f;
+    recoilShake = angularRecoil * RecoilToDegrees;
 
 
 }

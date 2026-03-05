@@ -45,7 +45,7 @@ public:
 	float recoilRecoverySpeed = 10.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "ADS")
-	FVector weaponADSOffset = FVector(600, 0, 450);
+	FVector weaponADSOffset = FVector(0, 0, 0);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Recoil|Physics")
 	float WeaponMassKG = 3.1f;

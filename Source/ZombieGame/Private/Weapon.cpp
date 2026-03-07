@@ -22,6 +22,9 @@ AWeapon::AWeapon()
 	PrimaryActorTick.bCanEverTick = true;
 	mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	SetRootComponent(mesh);
+
+    bReplicates = true;
+    SetReplicateMovement(true);
 }
 
 // Called when the game starts or when spawned

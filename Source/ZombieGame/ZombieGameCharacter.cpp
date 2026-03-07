@@ -20,45 +20,17 @@
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISenseConfig_Hearing.h"
 
-
-
-
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
-//////////////////////////////////////////////////////////////////////////
-// AZombieGameCharacter
-
-
 //could add dismemberent for players? if you get bitten in multiplayer to stay alive longer chop a limb off? 
-//would potentially require new animations tho
 
-//pressing r once slowly reloads while keeping the mag
-//double tap r quick reload but lose the mag, conveniant if you fully empty
-
-//make multi weapon slot system, melee, pistol, 2 big guns
-//tie this into customisation
-//then change the animation bp depending on which weapon holding
-
-//for customisation menu make it like tarkov so we dont have custimsation issues
-//just a simple send and receive and assign
 //save file needs to be different because when adding xp manually saving to file each time but doesnt do the rest for some reason
 //otherwise make it when you die or extract it saves everything
-//change this so that it applies the other players stuff on client side on THEIR character
-//curently does it for the client
-//also need to make it so that weapons are applied to the third person meshes for other players to see
-
-//use current weapons then tell it to only equip to third person if isnt client?
-//for first person shadows, get the mesh of weapon and attach it to third person mesh
 
 //add vaulting instead of jumping?
-
 //add leaning
 
-//make a function so adjust ads and recoil for any equiped weapon
-
-
-//naming conventions for send/receive save files
-
+//make a function so adjust ads and recoil for any equiped weapon (once got own assets)
 
 //might need make a method to attach left arm to weapon depending on grip (wihout affecting current attachment on right hand)
 //do this through anim bp?
@@ -355,7 +327,9 @@ void AZombieGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 //	DOREPLIFETIME(AZombieGameCharacter, PlayerCustomisation);
 	DOREPLIFETIME(AZombieGameCharacter, CurrentHealth);
 	//DOREPLIFETIME(AZombieGameCharacter, bIsSprinting);
-
+	DOREPLIFETIME(AZombieGameCharacter, primaryWeapon);
+	DOREPLIFETIME(AZombieGameCharacter, secondaryWeapon);
+	DOREPLIFETIME(AZombieGameCharacter, heldWeapon);
 
 	//player shoots and sends
 	//apply impacts too
@@ -452,10 +426,22 @@ void AZombieGameCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 
 void AZombieGameCharacter::SwitchToPrimary()
 {
-	EquipWeapon(primaryWeapon);
+	if (IsLocallyControlled())
+		Server_SwitchToPrimary();
 }
 
 void AZombieGameCharacter::SwitchToSecondary()
+{
+	if (IsLocallyControlled())
+		Server_SwitchToSecondary();
+}
+
+void AZombieGameCharacter::Server_SwitchToPrimary_Implementation()
+{
+	EquipWeapon(primaryWeapon);
+}
+
+void AZombieGameCharacter::Server_SwitchToSecondary_Implementation()
 {
 	EquipWeapon(secondaryWeapon);
 }
@@ -566,12 +552,49 @@ void AZombieGameCharacter::SetupStimulusSource()
 	}
 }
 
+void AZombieGameCharacter::Server_Fire_Implementation()
+{
+	if (!heldWeapon) return;
+
+	heldWeapon->Shoot();
+
+	Multicast_PlayFireEffects();
+}
+
+void AZombieGameCharacter::Multicast_PlayFireEffects_Implementation()
+{
+	if (!heldWeapon) return;
+
+	UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance();
+	if (!AnimInstance) return;
+
+	UAnimMontage* animToPlay = nullptr;
+
+	if (heldWeapon == primaryWeapon)
+		animToPlay = arShootMontage;
+	else if (heldWeapon == secondaryWeapon)
+		animToPlay = pistolShootMontage;
+
+	if (animToPlay)
+		AnimInstance->Montage_Play(animToPlay);
+}
+
 //WEAPON ACTIONS
 //add networking to this
 void AZombieGameCharacter::OnFire()
 {
-	if (!bIsReloading && !bIsMagChecking)
+	if (!IsLocallyControlled())
+		return;
+
+	if (!bIsReloading && !bIsMagChecking && !heldWeapon->bBoltLockedOpen)
 	{
+		Server_Fire();
+
+		if (heldWeapon->bBoltLockedOpen)
+		{
+			StopFiring();
+		}
+
 		if (fullAuto)
 		{
 			bIsFiring = true;
@@ -586,13 +609,46 @@ void AZombieGameCharacter::OnFire()
 		}
 		else
 		{
-			heldWeapon->Shoot();
+			UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance();
+			UAnimMontage* animToplay = nullptr;
+
+			if (heldWeapon == primaryWeapon)
+			{
+				animToplay = arShootMontage;
+			}
+			if (heldWeapon == secondaryWeapon)
+			{
+				animToplay = pistolShootMontage;
+			}
+
+			AnimInstance->Montage_Play(animToplay, 1.0f);
+
+			//heldWeapon->Shoot();
 		}
 	}
 }
 
 void AZombieGameCharacter::AutoFire()
 {
+	if (heldWeapon->bBoltLockedOpen)
+	{
+		StopFiring();
+	}
+
+	UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance();
+	UAnimMontage* animToplay = nullptr;
+
+	if (heldWeapon == primaryWeapon)
+	{
+		animToplay = arShootMontage;
+	}
+	if (heldWeapon == secondaryWeapon)
+	{
+		animToplay = pistolShootMontage;
+	}
+
+	AnimInstance->Montage_Play(animToplay, 1.0f);
+
 	heldWeapon->Shoot();
 }
 
@@ -652,6 +708,32 @@ void AZombieGameCharacter::OnMagCheckMontageEnded(UAnimMontage* Montage, bool bI
 	bIsMagChecking = false;
 }
 
+void AZombieGameCharacter::Server_Reload_Implementation()
+{
+	if (!heldWeapon) return;
+
+	heldWeapon->Reload();
+
+	UAnimMontage* anim = nullptr;
+
+	if (heldWeapon == primaryWeapon)
+		anim = ArReloadMontage;
+	else
+		anim = pistolReloadMontage;
+
+	Multicast_PlayReload(anim);
+}
+
+void AZombieGameCharacter::Multicast_PlayReload_Implementation(UAnimMontage* Montage)
+{
+	if (!Montage) return;
+
+	if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())
+	{
+		AnimInstance->Montage_Play(Montage);
+	}
+}
+
 void AZombieGameCharacter::SimpleReload()
 {
 	//add a reload time float so that shooting and other stuff is stopped from running
@@ -662,6 +744,9 @@ void AZombieGameCharacter::SimpleReload()
 
 
 	//make a system that uses a list of different animations then changes current reload (avoids if statements)
+
+	if (IsLocallyControlled())
+		Server_Reload();
 
 	if (bIsReloading || bIsMagChecking)
 	{
@@ -714,7 +799,7 @@ void AZombieGameCharacter::SimpleReload()
 		}
 	}
 
-	heldWeapon->Reload();
+	//heldWeapon->Reload();
 	//keep mag so more ammo can be put into it later
 }
 

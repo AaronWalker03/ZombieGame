@@ -76,6 +76,24 @@ protected:
 
 	void LoadCustomisationFromSave();
 
+	UFUNCTION(Server, Reliable)
+	void Server_Fire();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayFireEffects();
+
+	UFUNCTION(Server, Reliable)
+	void Server_SwitchToPrimary();
+
+	UFUNCTION(Server, Reliable)
+	void Server_SwitchToSecondary();
+
+	UFUNCTION(Server, Reliable)
+	void Server_Reload();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayReload(UAnimMontage* Montage);
+
 	USkeletalMeshComponent* FirstPersonMesh;
 
 	void OnReloadMontageEnded(UAnimMontage* Montage, bool bInterrupted);
@@ -144,13 +162,22 @@ protected:
 	virtual void DoJumpEnd();
 
 	//these are now the default selectors
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	AWeapon* primaryWeapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	AWeapon* secondaryWeapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	AWeapon* heldWeapon;*/
+
+	UPROPERTY(Replicated)
+	AWeapon* primaryWeapon;
+
+	UPROPERTY(Replicated)
+	AWeapon* secondaryWeapon;
+
+	UPROPERTY(Replicated)
 	AWeapon* heldWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
@@ -279,6 +306,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* pistolMagCheckMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* arShootMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* pistolShootMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	bool isHoldingPrimary = true;

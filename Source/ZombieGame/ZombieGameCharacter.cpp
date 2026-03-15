@@ -586,8 +586,8 @@ void AZombieGameCharacter::OnFire()
 		return;
 
 	if (!bIsReloading && !bIsMagChecking && !heldWeapon->bBoltLockedOpen)
-	{
-		Server_Fire();
+	{		
+		heldWeapon->Shoot();
 
 		if (heldWeapon->bBoltLockedOpen)
 		{
@@ -596,6 +596,8 @@ void AZombieGameCharacter::OnFire()
 
 		if (fullAuto)
 		{
+			
+
 			bIsFiring = true;
 
 			GetWorldTimerManager().SetTimer(
@@ -629,8 +631,11 @@ void AZombieGameCharacter::OnFire()
 	}
 }
 
+//add notify for full auto 
 void AZombieGameCharacter::AutoFire()
 {
+	Server_Fire();
+
 	if (heldWeapon->bBoltLockedOpen)
 	{
 		StopFiring();
@@ -650,7 +655,7 @@ void AZombieGameCharacter::AutoFire()
 
 	AnimInstance->Montage_Play(animToplay, 1.0f);
 
-	heldWeapon->Shoot();
+	//heldWeapon->Shoot();
 }
 
 void AZombieGameCharacter::StopFiring()

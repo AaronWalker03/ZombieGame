@@ -50,8 +50,8 @@ void AZombieAi::SetBodyparts()
     RForearm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RForearm"));
     RForearm->SetupAttachment(GetMesh(), FName("lowerarm_r"));
 
-    //LHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LHand"));
-    //LHand->SetupAttachment(GetMesh(), FName("hand_l"));
+    /*LHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LHand"));
+    LHand->SetupAttachment(GetMesh(), FName("hand_l"));*/
 
     RUpArm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RUpArm"));
     RUpArm->SetupAttachment(GetMesh(), FName("upperarm_r"));
@@ -59,8 +59,8 @@ void AZombieAi::SetBodyparts()
     LForearm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LForearm"));
     LForearm->SetupAttachment(GetMesh(), FName("lowerarm_l"));
 
-    //RHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RHand"));
-    //RHand->SetupAttachment(GetMesh(), FName("hand_r"));
+    /*RHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RHand"));
+    RHand->SetupAttachment(GetMesh(), FName("hand_r"));*/
 
     LThigh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LThigh"));
     LThigh->SetupAttachment(GetMesh(), FName("thigh_l"));
@@ -127,7 +127,7 @@ void AZombieAi::SetBodyparts()
     RFoot->SetStaticMesh(CubeAsset.Object);
     RFoot->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
 
-    LimbHealthMap.Add("Head", FLimbData(35.f, 1.5f));
+    LimbHealthMap.Add("Head", FLimbData(100.f, 1.5f));
 
     // Arms: low importance
     LimbHealthMap.Add("LUpArm", FLimbData(15.f, 0.5f)); // First Number Health, Second how fast the zombie will bleed out from losing that appendage
@@ -205,10 +205,10 @@ void AZombieAi::ApplyLimbDamage(UPrimitiveComponent* HitComp, float Damage)
                 Limb.BleedSeverity
             );
 
-            GetWorld()->GetTimerManager().SetTimer(
+            GetWorldTimerManager().SetTimer(
                 TimerHandle,
                 BleedDelegate,
-                20.0f,
+                5.0f,
                 true
             );
 
@@ -323,14 +323,12 @@ void AZombieAi::KillZombie()
     // After next round, Destroy actor and components if we want to allow the bodies to pile up. Or just set a timer to Call Destroy actor
 
     GetWorldTimerManager().SetTimer(
-        TimerHandle,
-        this,
-        &AZombieAi::DestroyZombie,
-        5.0f,
-        false
+       TimerHandle,
+       this,
+       &AZombieAi::DestroyZombie,
+       5.0f,
+       false
     );
-
-    GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("Destroy Called"));
 }
 
 void AZombieAi::DestroyZombie()
@@ -421,10 +419,13 @@ void AZombieAi::Tick(float DeltaTime)
         );
     }
 
-    if (CurrentHealth <= 0.0f) //|| bloodQuantity
+    if (bloodQuantity <= 0.0f || CurrentHealth <= 0.0f) //|| bloodQuantity
     {
         KillZombie();
     }
+
+    FString msg = FString::Printf(TEXT("Health: %f  Blood: %f"), CurrentHealth, bloodQuantity);
+    GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, msg);
 
     // May need to add in a check here for if the zombie has both legs blown off for changing movement state to crawling or something along those lines
 }

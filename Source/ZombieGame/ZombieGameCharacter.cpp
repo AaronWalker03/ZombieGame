@@ -587,7 +587,7 @@ void AZombieGameCharacter::OnFire()
 
 	if (!bIsReloading && !bIsMagChecking && !heldWeapon->bBoltLockedOpen)
 	{		
-		heldWeapon->Shoot();
+		Server_Fire();
 
 		if (heldWeapon->bBoltLockedOpen)
 		{

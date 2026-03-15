@@ -174,15 +174,6 @@ void AZombieAi::BeginPlay()
     {
         pawnSensingComp->OnSeePawn.AddDynamic(this, &AZombieAi::HandleSeePlayer);
     }
-
-    if (!GetCharacterMovement())
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("NO Movement Component"));
-    }
-    else
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, TEXT("HAS Movement Component"));
-    }
 }
 
 
@@ -325,19 +316,21 @@ void AZombieAi::KillZombie()
     }
 
     UBehaviorTree* tree = GetBehaviourTree();
-    tree->FinishDestroy();
+    //tree->FinishDestroy();
 
     //if (Spawner) Spawner->NotifyZombieDied();
 
     // After next round, Destroy actor and components if we want to allow the bodies to pile up. Or just set a timer to Call Destroy actor
 
-    /*GetWorld()->GetTimerManager().SetTimer(
+    GetWorldTimerManager().SetTimer(
         TimerHandle,
         this,
         &AZombieAi::DestroyZombie,
-        10.0f,
+        5.0f,
         false
-    );*/
+    );
+
+    GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("Destroy Called"));
 }
 
 void AZombieAi::DestroyZombie()
@@ -428,9 +421,9 @@ void AZombieAi::Tick(float DeltaTime)
         );
     }
 
-    if (CurrentHealth || bloodQuantity <= 0.0f)
+    if (CurrentHealth <= 0.0f) //|| bloodQuantity
     {
-        //KillZombie();
+        KillZombie();
     }
 
     // May need to add in a check here for if the zombie has both legs blown off for changing movement state to crawling or something along those lines

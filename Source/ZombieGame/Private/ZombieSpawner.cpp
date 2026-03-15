@@ -23,6 +23,8 @@ void AZombieSpawner::BeginPlay()
 	
     GetSpawnPoints();
     GetPlayerPawns();
+
+    TrySpawnZombies();
 }
 
 // Called every frame

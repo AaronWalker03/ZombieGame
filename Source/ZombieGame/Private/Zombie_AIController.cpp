@@ -68,20 +68,20 @@ void AZombie_AIController::BeginPlay()
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("NAV SYSTEM OK"));
 	}
 
-	UNavigationPath* Path = UNavigationSystemV1::FindPathToLocationSynchronously(
+	/*UNavigationPath* Path = UNavigationSystemV1::FindPathToLocationSynchronously(
 		GetWorld(),
 		GetPawn()->GetActorLocation(),
 		GetPawn()->GetActorLocation() + FVector(300, 0, 0)
-	);
+	);*/
 
-	if (!Path || Path->PathPoints.Num() == 0)
+	/*if (!Path || Path->PathPoints.Num() == 0)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NO VALID PATH"));
 	}
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("PATH VALID"));
-	}
+	}*/
 	//MoveToLocation(GetPawn()->GetActorLocation() + FVector(300, 0, 0));
 }
 
@@ -102,7 +102,7 @@ void AZombie_AIController::Tick(float DeltaTime)
 		);
 	}
 
-	if (GetMoveStatus() == EPathFollowingStatus::Idle)
+	/*if (GetMoveStatus() == EPathFollowingStatus::Idle)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("MOVE IDLE"));
 	}
@@ -128,7 +128,7 @@ void AZombie_AIController::Tick(float DeltaTime)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, TEXT("HAS NAV MOVEMENT"));
 		}
-	}
+	}*/
 }
 
 void AZombie_AIController::TrySetInitialTarget()

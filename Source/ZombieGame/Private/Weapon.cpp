@@ -157,10 +157,10 @@ void AWeapon::Shoot()
 
     bool bIsLastRound = (mags[currentMagIndex] == 1);
 
-    if (bIsLastRound && FireLastAnimation)
+    if (bIsLastRound)
     {
-        mesh->PlayAnimation(FireLastAnimation, false);
-        bBoltLockedOpen = true;   // bolt now stays open
+        bBoltLockedOpen = true;
+        mesh->PlayAnimation(FireLastAnimation, false);     
     }
     else if (FireAnimation)
     {
@@ -201,18 +201,17 @@ void AWeapon::Reload()
 
     currentMagIndex++;
 
-    if (mesh)
+
+    if (bWasEmpty)
     {
-        if (bWasEmpty && ReloadEmptyAnimation)
-        {
-            mesh->PlayAnimation(ReloadEmptyAnimation, false);
-            bBoltLockedOpen = false;
-        }
-        else if (ReloadAnimation)
-        {
-            mesh->PlayAnimation(ReloadAnimation, false);
-        }
+        mesh->PlayAnimation(ReloadEmptyAnimation, false);
+        bBoltLockedOpen = false;
     }
+    else
+    {
+        mesh->PlayAnimation(ReloadAnimation, false);
+    }
+
 }
 
 int AWeapon::MagCheck()
@@ -226,6 +225,5 @@ int AWeapon::MagCheck()
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 

@@ -133,13 +133,12 @@ void AZombieGameCharacter::Tick(float DeltaTime)
 	UpdateMovementSpeed(DeltaTime);	
 	UpdateWalkAnimation(DeltaTime);
 	UpdateADS(DeltaTime);
-	
 
 	//change recoil to a function
 	if (heldWeapon)
 	{
-		float pitchStep = heldWeapon->recoilPitch * DeltaTime * 20.0f;
-		float yawStep = heldWeapon->recoilYaw * DeltaTime * 20.0f;
+		float pitchStep = heldWeapon->recoilPitch * DeltaTime * 4.0f;
+		float yawStep = heldWeapon->recoilYaw * DeltaTime * 3.0f;
 
 		AddControllerPitchInput(-pitchStep);
 		AddControllerYawInput(yawStep);
@@ -609,6 +608,7 @@ void AZombieGameCharacter::OnFire()
 		}
 		else
 		{
+
 			UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance();
 			UAnimMontage* animToplay = nullptr;
 
@@ -622,6 +622,7 @@ void AZombieGameCharacter::OnFire()
 			}
 
 			AnimInstance->Montage_Play(animToplay, 1.0f);
+
 
 			//heldWeapon->Shoot();
 		}
@@ -712,42 +713,6 @@ void AZombieGameCharacter::Server_Reload_Implementation()
 {
 	if (!heldWeapon) return;
 
-	heldWeapon->Reload();
-
-	UAnimMontage* anim = nullptr;
-
-	if (heldWeapon == primaryWeapon)
-		anim = ArReloadMontage;
-	else
-		anim = pistolReloadMontage;
-
-	Multicast_PlayReload(anim);
-}
-
-void AZombieGameCharacter::Multicast_PlayReload_Implementation(UAnimMontage* Montage)
-{
-	if (!Montage) return;
-
-	if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())
-	{
-		AnimInstance->Montage_Play(Montage);
-	}
-}
-
-void AZombieGameCharacter::SimpleReload()
-{
-	//add a reload time float so that shooting and other stuff is stopped from running
-	//use player to set amount of mags so that it can be used with UI
-
-
-	//implement different reloads based on primary or secondary
-
-
-	//make a system that uses a list of different animations then changes current reload (avoids if statements)
-
-	if (IsLocallyControlled())
-		Server_Reload();
-
 	if (bIsReloading || bIsMagChecking)
 	{
 		return;
@@ -769,9 +734,9 @@ void AZombieGameCharacter::SimpleReload()
 			{
 				animToplay = pistolFullReloadMontage;
 			}
-			
-			AnimInstance->Montage_Play(animToplay, 1.2f);
 
+			Multicast_PlayReload(animToplay);
+			AnimInstance->Montage_Play(animToplay, 1.0f);
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AZombieGameCharacter::OnReloadMontageEnded);
 			AnimInstance->Montage_SetEndDelegate(EndDelegate, animToplay);
@@ -792,15 +757,32 @@ void AZombieGameCharacter::SimpleReload()
 				animToplay = pistolReloadMontage;
 			}
 
-			AnimInstance->Montage_Play(animToplay, 1.2f);
+			Multicast_PlayReload(animToplay);
+			AnimInstance->Montage_Play(animToplay, 1.0f);
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AZombieGameCharacter::OnReloadMontageEnded);
 			AnimInstance->Montage_SetEndDelegate(EndDelegate, animToplay);
 		}
 	}
 
-	//heldWeapon->Reload();
-	//keep mag so more ammo can be put into it later
+	heldWeapon->Reload();
+	
+}
+
+void AZombieGameCharacter::Multicast_PlayReload_Implementation(UAnimMontage* Montage)
+{
+	if (!Montage) return;
+
+	if (UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance())
+	{
+		AnimInstance->Montage_Play(Montage);
+	}
+}
+
+void AZombieGameCharacter::SimpleReload()
+{
+	if (IsLocallyControlled())
+		Server_Reload();
 }
 
 //do the same as simple reload but faster and lose mag

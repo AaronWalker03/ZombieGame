@@ -182,7 +182,7 @@ protected:
 	UPROPERTY(Replicated)
 	AWeapon* secondaryWeapon;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_HeldWeapon)
 	AWeapon* heldWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")

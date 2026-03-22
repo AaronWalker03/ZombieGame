@@ -300,8 +300,6 @@ void AZombieAi::SetSpawner(AZombieSpawner* inSpawner)
 
 void AZombieAi::KillZombie()
 {
-    if (bIsDead) return;
-
     TArray<UActorComponent*> Components;
     GetComponents(UStaticMeshComponent::StaticClass(), Components);
 
@@ -320,6 +318,7 @@ void AZombieAi::KillZombie()
 
     if (Spawner) Spawner->NotifyZombieDied();
 
+    if (bIsDead) return;
     bIsDead = true;
 
     AAIController* aiController = Cast<AAIController>(GetController());

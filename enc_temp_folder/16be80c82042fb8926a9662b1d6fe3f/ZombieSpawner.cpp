@@ -34,13 +34,13 @@ void AZombieSpawner::Tick(float DeltaTime)
 
     RoundManager();
 
-    FString msg = FString::Printf(TEXT("Round: %d, Zombies Alive: %d, Remaining to Spawn: %d"), RoundNum, AliveZombies, NumToSpawn);
+    FString msg = FString::Printf(TEXT("Round: %I64d  Zombies Left Remaining: %I64d"), RoundNum, AliveZombies);
     GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, msg);
 }
 
 void AZombieSpawner::RoundManager()
 {
-    if (NumToSpawn == 0 && AliveZombies == 0)
+    if (NumToSpawn && AliveZombies == 0)
     {
         StartNewRound();
         return;

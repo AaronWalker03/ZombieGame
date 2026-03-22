@@ -26,7 +26,7 @@ protected:
 
 	const int HordeCap = 24;	// limit of zombies that can be on the map at any one time
 
-	const int BaseNumOfZombies = 6;
+	const int BaseNumOfZombies = 1;
 
 	const int LinearRoundIncrease = 3;
 

@@ -94,6 +94,11 @@ protected:
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_PlayReload(UAnimMontage* Montage);
 
+	UFUNCTION()
+	void OnRep_HeldWeapon();
+
+
+
 	USkeletalMeshComponent* FirstPersonMesh;
 
 	void OnReloadMontageEnded(UAnimMontage* Montage, bool bInterrupted);

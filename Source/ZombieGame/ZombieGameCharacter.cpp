@@ -369,6 +369,21 @@ AWeapon* AZombieGameCharacter::SpawnWeapon(TSubclassOf<AWeapon> weaponToSpawn)
 }
 
 
+void AZombieGameCharacter::OnRep_HeldWeapon()
+{
+	if (!heldWeapon) return;
+
+	// Attach to correct socket for ALL clients
+	if (heldWeapon == primaryWeapon)
+	{
+		AttachWeaponToSocket(heldWeapon, "HKSocket", true);
+	}
+	else if (heldWeapon == secondaryWeapon)
+	{
+		AttachWeaponToSocket(heldWeapon, "WeaponSocket", true);
+	}
+}
+
 //gona have to change animation stuff in anim bp
 void AZombieGameCharacter::AttachWeaponToSocket(AWeapon* Weapon, FName SocketName, bool isOnFPMesh)
 {
@@ -408,16 +423,10 @@ void AZombieGameCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 		}
 	}
 
-	if (heldWeapon != primaryWeapon)
-	{
-		heldWeapon = WeaponToEquip;
-		AttachWeaponToSocket(heldWeapon, "HKSocket", true);
-	}
-	else if (heldWeapon != secondaryWeapon)
-	{
-		heldWeapon = WeaponToEquip;
-		AttachWeaponToSocket(heldWeapon, "WeaponSocket", true);
-	}
+	heldWeapon = WeaponToEquip;
+
+	// Do it immediately on server too
+	OnRep_HeldWeapon();
 	
 	// Update ADS
 	ADSOffset = heldWeapon->weaponADSOffset;

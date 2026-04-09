@@ -5,6 +5,7 @@
 #include "ZombieAi.h"
 #include "ZombieSpawnPoint.h"
 #include "EngineUtils.h"
+#include "Blueprint/AIBlueprintHelperLibrary.h"
 
 //implement zombies dying so rounds actually change
 
@@ -162,15 +163,14 @@ void AZombieSpawner::SpawnZombieNearPlayer(APawn* Player)
     FVector location = spawnPoint->GetActorLocation();
     FRotator rotation = spawnPoint->GetActorRotation();
 
-    FActorSpawnParameters spawnParams;
-    spawnParams.SpawnCollisionHandlingOverride =
-        ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-    AZombieAi* zombie = GetWorld()->SpawnActor<AZombieAi>(
-        ZombieClass,
-        location,
-        rotation,
-        spawnParams
+    AZombieAi* zombie = Cast<AZombieAi>(
+        UAIBlueprintHelperLibrary::SpawnAIFromClass(
+            GetWorld(),
+            ZombieClass,
+            nullptr,
+            location,
+            rotation
+        )
     );
 
     if (zombie)

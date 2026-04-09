@@ -25,7 +25,7 @@ EBTNodeResult::Type UBTTask_FindRandomLocation::ExecuteTask(UBehaviorTreeCompone
 			if (UNavigationSystemV1* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld()))
 			{
 				FNavLocation Location;
-				if (NavSys->GetRandomPointInNavigableRadius(Origin, SearchRadius, Location))
+				if (NavSys->GetRandomReachablePointInRadius(Origin, SearchRadius, Location))
 				{
 					OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), Location.Location);
 
@@ -33,7 +33,7 @@ EBTNodeResult::Type UBTTask_FindRandomLocation::ExecuteTask(UBehaviorTreeCompone
 					FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 
 					// Rest of sequence still in progress
-					return EBTNodeResult::InProgress;
+					return EBTNodeResult::Succeeded;
 				}
 
 				// finish with success

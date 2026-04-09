@@ -552,12 +552,8 @@ void AZombieGameCharacter::SetupStimulusSource()
 {
 	StimulusSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus"));
 
-	if (StimulusSource)
-	{
-		StimulusSource->RegisterForSense(TSubclassOf<UAISense_Sight>());
-		StimulusSource->RegisterForSense(TSubclassOf<UAISense_Hearing>());
-		StimulusSource->RegisterWithPerceptionSystem();
-	}
+	StimulusSource->RegisterForSense(UAISense_Sight::StaticClass());
+	StimulusSource->RegisterWithPerceptionSystem();
 }
 
 void AZombieGameCharacter::Server_Fire_Implementation()

@@ -30,6 +30,8 @@ AZombieAi::AZombieAi()
 
     bloodQuantity = 5.0f; // 5 Litres is the average amount in a human
 
+    bleedOutRate = 2.0f;
+
     damage = 10.f;
 
     CurrentState = EZombieState::ZS_Idle;
@@ -39,96 +41,55 @@ AZombieAi::AZombieAi()
 
 void AZombieAi::SetBodyparts()
 {
-    HeadMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HeadMesh"));
-    HeadMesh->SetupAttachment(GetMesh(), FName("head")); // attach to head socket
-
     TorsoMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TorsoMesh"));
-    TorsoMesh->SetupAttachment(GetMesh(), FName("torso"));
+    TorsoMesh->SetupAttachment(GetMesh(), FName("Torso"));
 
+    HeadMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HeadMesh"));
+    HeadMesh->SetupAttachment(TorsoMesh); // attach to head socket
+
+    //Setup Left Arm Attachments
     LUpArm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LUpArm"));
-    LUpArm->SetupAttachment(GetMesh(), FName("upperarm_l"));
+    LUpArm->SetupAttachment(TorsoMesh);
+
+    LForearm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LForearm"));
+    LForearm->SetupAttachment(LUpArm);
+
+    LHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LHand"));
+    LHand->SetupAttachment(LForearm);
+
+    //Setup Right Arm Attachments
+    RUpArm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RUpArm"));
+    RUpArm->SetupAttachment(TorsoMesh);
 
     RForearm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RForearm"));
     RForearm->SetupAttachment(GetMesh(), FName("lowerarm_r"));
 
-    /*LHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LHand"));
-    LHand->SetupAttachment(GetMesh(), FName("hand_l"));*/
+    RHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RHand"));
+    RHand->SetupAttachment(RForearm);
 
-    RUpArm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RUpArm"));
-    RUpArm->SetupAttachment(GetMesh(), FName("upperarm_r"));
-
-    LForearm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LForearm"));
-    LForearm->SetupAttachment(GetMesh(), FName("lowerarm_l"));
-
-    /*RHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RHand"));
-    RHand->SetupAttachment(GetMesh(), FName("hand_r"));*/
-
+    //Setup Left Leg Attachments
     LThigh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LThigh"));
-    LThigh->SetupAttachment(GetMesh(), FName("thigh_l"));
+    LThigh->SetupAttachment(TorsoMesh);
 
     LCalf = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LCalf"));
-    LCalf->SetupAttachment(GetMesh(), FName("calf_l"));
+    LCalf->SetupAttachment(LThigh);
 
     LFoot = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LFoot"));
-    LFoot->SetupAttachment(GetMesh(), FName("foot_l"));
+    LFoot->SetupAttachment(LCalf);
 
+    //Setup Right Leg Attachments
     RThigh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RThigh"));
-    RThigh->SetupAttachment(GetMesh(), FName("thigh_r"));
+    RThigh->SetupAttachment(TorsoMesh);
 
     RCalf = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RCalf"));
-    RCalf->SetupAttachment(GetMesh(), FName("calf_r"));
+    RCalf->SetupAttachment(RThigh);
 
     RFoot = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RFoot"));
-    RFoot->SetupAttachment(GetMesh(), FName("foot_r"));
+    RFoot->SetupAttachment(RCalf);
 
     GetMesh()->SetVisibility(false);
 
-    // Load a basic cube mesh from the engine content
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeAsset(TEXT("/Engine/BasicShapes/Cube.Cube"));
-
-    HeadMesh->SetStaticMesh(CubeAsset.Object);
-    HeadMesh->SetRelativeScale3D(FVector(0.25f, 0.25f, 0.25f));  // Scale down
-
-    TorsoMesh->SetStaticMesh(CubeAsset.Object);
-    TorsoMesh->SetRelativeScale3D(FVector(0.25f, 0.25f, 0.25f));
-
-    LUpArm->SetStaticMesh(CubeAsset.Object);
-    LUpArm->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
-
-    LForearm->SetStaticMesh(CubeAsset.Object);
-    LForearm->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
-
-    //LHand->SetStaticMesh(CubeAsset.Object);
-    //LHand->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
-
-    RUpArm->SetStaticMesh(CubeAsset.Object);
-    RUpArm->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
-
-    RForearm->SetStaticMesh(CubeAsset.Object);
-    RForearm->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
-
-    //RHand->SetStaticMesh(CubeAsset.Object);
-    //RHand->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
-
-    LThigh->SetStaticMesh(CubeAsset.Object);
-    LThigh->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
-
-    LCalf->SetStaticMesh(CubeAsset.Object);
-    LCalf->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
-
-    LFoot->SetStaticMesh(CubeAsset.Object);
-    LFoot->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
-
-    RThigh->SetStaticMesh(CubeAsset.Object);
-    RThigh->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
-
-    RCalf->SetStaticMesh(CubeAsset.Object);
-    RCalf->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
-
-    RFoot->SetStaticMesh(CubeAsset.Object);
-    RFoot->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
-
-    LimbHealthMap.Add("Head", FLimbData(100.f, 1.5f));
+    LimbHealthMap.Add("HeadMesh", FLimbData(99.f, 1.5f));
 
     // Arms: low importance
     LimbHealthMap.Add("LUpArm", FLimbData(15.f, 0.5f)); // First Number Health, Second how fast the zombie will bleed out from losing that appendage
@@ -147,7 +108,7 @@ void AZombieAi::SetBodyparts()
     LimbHealthMap.Add("RFoot", FLimbData(10.f, 0.1f));
 
     // Torso or spine can be main kill zone if you want
-    LimbHealthMap.Add("Torso", FLimbData(60.f, 0.3f));
+    LimbHealthMap.Add("TorsoMesh", FLimbData(60.f, 0.3f));
 }
 
 void AZombieAi::BeginPlay()
@@ -173,7 +134,7 @@ void AZombieAi::BeginPlay()
 
     if (pawnSensingComp)
     {
-        pawnSensingComp->OnSeePawn.AddDynamic(this, &AZombieAi::HandleSeePlayer);
+        //pawnSensingComp->OnSeePawn.AddDynamic(this, &AZombieAi::HandleSeePlayer);
     }
 }
 
@@ -195,6 +156,10 @@ void AZombieAi::ApplyLimbDamage(UPrimitiveComponent* HitComp, float Damage)
         UE_LOG(LogTemp, Warning, TEXT("%s took %.2f damage (%.2f / %.2f)"),
             *LimbName.ToString(), Damage, Limb.CurrentHealth, Limb.MaxHealth);
 
+        FString msg = FString::Printf(TEXT("%s took %.2f damage (%.2f / %.2f)"),
+            *LimbName.ToString(), Damage, Limb.CurrentHealth, Limb.MaxHealth);
+        GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Orange, msg);
+
         if (Limb.CurrentHealth <= Damage)
         {
             DismemberLimb(HitComp);
@@ -209,7 +174,7 @@ void AZombieAi::ApplyLimbDamage(UPrimitiveComponent* HitComp, float Damage)
             GetWorldTimerManager().SetTimer(
                 TimerHandle,
                 BleedDelegate,
-                0.1f,
+                bleedOutRate,
                 true
             );
 
@@ -313,7 +278,7 @@ void AZombieAi::KillZombie()
 
             if (!LimbComp->IsSimulatingPhysics())
             {
-                //LimbComp->SetSimulatePhysics(true);
+                LimbComp->SetSimulatePhysics(true);
             }
         }
     }
@@ -416,23 +381,23 @@ void AZombieAi::Tick(float DeltaTime)
     //    break;
     //}
 
-    if (pawnSensingComp)
-    {
-        DrawDebugCone(
-            GetWorld(),
-            GetActorLocation(),
-            GetActorForwardVector(),
-            pawnSensingComp->SightRadius,
-            FMath::DegreesToRadians(pawnSensingComp->GetPeripheralVisionAngle() / 2.0f), // half-angle
-            FMath::DegreesToRadians(pawnSensingComp->GetPeripheralVisionAngle() / 2.0f), // half-angle
-            12,
-            FColor::Green,
-            false,
-            0.1f,
-            0,
-            1.0f
-        );
-    }
+    //if (pawnSensingComp)
+    //{
+    //    DrawDebugCone(
+    //        GetWorld(),
+    //        GetActorLocation(),
+    //        GetActorForwardVector(),
+    //        pawnSensingComp->SightRadius,
+    //        FMath::DegreesToRadians(pawnSensingComp->GetPeripheralVisionAngle() / 2.0f), // half-angle
+    //        FMath::DegreesToRadians(pawnSensingComp->GetPeripheralVisionAngle() / 2.0f), // half-angle
+    //        12,
+    //        FColor::Green,
+    //        false,
+    //        0.1f,
+    //        0,
+    //        1.0f
+    //    );
+    //}
 
     if (bloodQuantity <= 0.0f || CurrentHealth <= 0.0f)
     {

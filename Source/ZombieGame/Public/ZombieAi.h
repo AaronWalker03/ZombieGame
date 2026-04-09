@@ -101,8 +101,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
 	UStaticMeshComponent* TorsoMesh;
 
-	//UPROPERTY(VisibleAnywhere, Category = "Body Parts")
-	//UStaticMeshComponent* LHand;
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* LHand;
 
 	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
 	UStaticMeshComponent* RUpArm;
@@ -110,8 +110,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
 	UStaticMeshComponent* RForearm;
 
-	//UPROPERTY(VisibleAnywhere, Category = "Body Parts")
-	//UStaticMeshComponent* RHand;
+	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
+	UStaticMeshComponent* RHand;
 
 	UPROPERTY(VisibleAnywhere, Category = "Body Parts")
 	UStaticMeshComponent* LThigh;
@@ -148,6 +148,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
 	float bloodQuantity; //in litres
+
+	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
+	float bleedOutRate; // how often in seconds should the bleed damage tick off the zombie
 
 	UPROPERTY(EditDefaultsOnly, Category = "Zombie Stats")
 	float movementSpeed;

@@ -28,7 +28,6 @@ void AZombie_AIController::OnPossess(APawn* InPawn)
 		{
 			UBlackboardComponent* b;
 			UseBlackboard(tree->BlackboardAsset, b);
-			Blackboard = b;
 			RunBehaviorTree(tree);
 
 			if (GEngine)
@@ -36,18 +35,20 @@ void AZombie_AIController::OnPossess(APawn* InPawn)
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("POSSESS CALLED"));
 			}
 
-			GetBlackboardComponent()->SetValueAsVector(
-				TEXT("TargetLocation"),
-				GetPawn()->GetActorLocation() - FVector(400, 0, 0)
-			);
+			UE_LOG(LogTemp, Warning, TEXT("%s sees player"), *GetName());
 
-			GetWorld()->GetTimerManager().SetTimer(
-				TargetRetryHandle,
-				this,
-				&AZombie_AIController::TrySetInitialTarget,
-				0.5f,   // check every half second
-				true
-			);
+			//GetBlackboardComponent()->SetValueAsVector(
+			//	TEXT("TargetLocation"),
+			//	GetPawn()->GetActorLocation() - FVector(400, 0, 0)
+			//);
+
+			//GetWorld()->GetTimerManager().SetTimer(
+			//	TargetRetryHandle,
+			//	this,
+			//	&AZombie_AIController::TrySetInitialTarget,
+			//	0.5f,   // check every half second
+			//	true
+			//);
 		}
 	}
 }
@@ -89,46 +90,42 @@ void AZombie_AIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!bTestedMove)
-	{
-		bTestedMove = true;
-		EPathFollowingRequestResult::Type Result = MoveToLocation(GetPawn()->GetActorLocation() + FVector(800, 0, 0));
+	AActor* Target = Cast<AActor>(GetBlackboardComponent()->GetValueAsObject("TargetPlayer"));
 
+	FString State = Target ? TEXT("CHASE") : TEXT("PATROL");
+
+	if (GEngine)
+	{
 		GEngine->AddOnScreenDebugMessage(
 			-1,
-			5.f,
-			FColor::Yellow,
-			FString::Printf(TEXT("Move result: %d"), (int)Result)
+			0.0f,
+			Target ? FColor::Green : FColor::Red,
+			FString::Printf(TEXT("%s -> %s"), *GetName(), *State)
 		);
 	}
 
-	/*if (GetMoveStatus() == EPathFollowingStatus::Idle)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("MOVE IDLE"));
-	}
+	float CurrentTime = GetWorld()->GetTimeSeconds();
 
-	if (!GetPawn())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("NO PAWN"));
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, TEXT("HAS PAWN"));
-	}
+	// Check if we currently see the player
+	TArray<AActor*> PerceivedActors;
+	PerceptionComponent->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), PerceivedActors);
 
-	if (GetPawn())
-	{
-		UNavMovementComponent* NavMove = GetPawn()->FindComponentByClass<UNavMovementComponent>();
+	bool bCurrentlySeeingPlayer = false;
 
-		if (!NavMove)
+	for (AActor* Actor : PerceivedActors)
+	{
+		if (Cast<AZombieGameCharacter>(Actor))
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("NO NAV MOVEMENT COMPONENT"));
+			bCurrentlySeeingPlayer = true;
+			break;
 		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, TEXT("HAS NAV MOVEMENT"));
-		}
-	}*/
+	}
+
+	// Only forget if NOT seeing AND timer expired
+	if (!bCurrentlySeeingPlayer && (CurrentTime - LastSeenTime > SightConfig->GetMaxAge()))
+	{
+		GetBlackboardComponent()->ClearValue("TargetPlayer");
+	}
 }
 
 void AZombie_AIController::TrySetInitialTarget()
@@ -149,19 +146,17 @@ void AZombie_AIController::SetupPerceptionSystem()
 	PerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent"));
 	SetPerceptionComponent(*PerceptionComponent);
 
-	if (SightConfig)
-	{
 		SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
-		SightConfig->SightRadius = 500.0f;
-		SightConfig->LoseSightRadius = SightConfig->SightRadius + 25.0f;
-		SightConfig->PeripheralVisionAngleDegrees = 90.0f;
+		SightConfig->SightRadius = 1500.0f;
+		SightConfig->LoseSightRadius = SightConfig->SightRadius + 50.0f;
+		SightConfig->PeripheralVisionAngleDegrees = 70.0f;
 		SightConfig->SetMaxAge(5.0f); // Length of time till stimulus is forgotten
 		SightConfig->AutoSuccessRangeFromLastSeenLocation = 520.0f;
 
 		SightConfig->DetectionByAffiliation.bDetectEnemies = true;
 		SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
 		SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
-	}
+	
 
 	if (HearingConfig)
 	{
@@ -176,7 +171,7 @@ void AZombie_AIController::SetupPerceptionSystem()
 
 	// Register senses
 	PerceptionComponent->ConfigureSense(*SightConfig);
-	PerceptionComponent->ConfigureSense(*HearingConfig);
+	//PerceptionComponent->ConfigureSense(*HearingConfig);
 
 	PerceptionComponent->SetDominantSense(UAISense_Sight::StaticClass());
 
@@ -211,23 +206,31 @@ void AZombie_AIController::OnPerceptionUpdated(const TArray<AActor*>& updatedAct
 			{
 				if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 				{
-					bCanSeePlayer = Stimulus.WasSuccessfullySensed();
+					bCanSeePlayer |= Stimulus.WasSuccessfullySensed();
 					SeenPlayer = Player;
 				}
 			}
 		}
 	}
 
-	// ONLY write if value actually changed
-	if (GetBlackboardComponent()->GetValueAsBool("PlayerVisible") != bCanSeePlayer)
+	if (SeenPlayer)
 	{
-		GetBlackboardComponent()->SetValueAsBool("PlayerVisible", bCanSeePlayer);
+		// LOCK TARGET
+		GetBlackboardComponent()->SetValueAsObject("TargetPlayer", SeenPlayer);
+
+		LastSeenTime = GetWorld()->GetTimeSeconds();
 	}
 
-	if (bCanSeePlayer)
-	{
-		GetBlackboardComponent()->SetValueAsObject("TargetPlayer", SeenPlayer);
-	}
+	//// ONLY write if value actually changed
+	//if (GetBlackboardComponent()->GetValueAsBool("PlayerVisible") != bCanSeePlayer)
+	//{
+	//	GetBlackboardComponent()->SetValueAsBool("PlayerVisible", bCanSeePlayer);
+	//}
+
+	//if (bCanSeePlayer)
+	//{
+	//	GetBlackboardComponent()->SetValueAsObject("TargetPlayer", SeenPlayer);
+	//}
 }
 
 void AZombie_AIController::OnTargetSpotted(AActor* Actor, FAIStimulus const Stimulus)

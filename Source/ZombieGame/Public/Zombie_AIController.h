@@ -46,4 +46,6 @@ private:
 	FTimerHandle TargetRetryHandle;
 
 	bool bTestedMove = false;
+
+	float LastSeenTime = 0.0f;
 };

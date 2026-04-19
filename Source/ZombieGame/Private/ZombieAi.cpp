@@ -62,7 +62,7 @@ void AZombieAi::SetBodyparts()
     RUpArm->SetupAttachment(TorsoMesh);
 
     RForearm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RForearm"));
-    RForearm->SetupAttachment(GetMesh(), FName("lowerarm_r"));
+    RForearm->SetupAttachment(RUpArm);
 
     RHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RHand"));
     RHand->SetupAttachment(RForearm);
@@ -178,7 +178,7 @@ void AZombieAi::ApplyLimbDamage(UPrimitiveComponent* HitComp, float Damage)
                 true
             );
 
-            //uncomment this once we've decided the XP shite
+           //uncomment this once we've decided the XP shite
            /* AZombieGameCharacter* PlayerChar = Cast<AZombieGameCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
             PlayerChar->AddXP(5);*/
 
@@ -216,10 +216,13 @@ void AZombieAi::DismemberLimb(UPrimitiveComponent* HitComp)
     {
         UE_LOG(LogTemp, Warning, TEXT("Detaching limb: %s"), *LimbName.ToString());
 
-        // Detach and enable physics
-        LimbComp->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-        LimbComp->SetSimulatePhysics(true);
-        LimbComp->AddImpulse(FVector(0.f, 0.f, 200.f), NAME_None, true);
+        if (LimbName != "TorsoMesh")
+        {
+            // Detach and enable physics
+            LimbComp->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+            LimbComp->SetSimulatePhysics(true);
+            LimbComp->AddImpulse(FVector(0.f, 0.f, 200.f), NAME_None, true);
+        }
 
         //could be cool for the blood fx at first it spurts out loads then over time goes down as less blood in body
 

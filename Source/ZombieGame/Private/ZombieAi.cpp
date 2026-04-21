@@ -337,6 +337,18 @@ float AZombieAi::GetCurrentHealth()
     return CurrentHealth;
 }
 
+void AZombieAi::SetCrawlMode()
+{
+    // Rotate to the floor and face player for now before animations
+    GetMesh()->SetRelativeRotation(FRotator(0, -90, 90));
+
+    // Move down to the ground
+    GetMesh()->SetRelativeLocation(FVector(0, 0, -40));
+
+    // Slow them down
+    GetCharacterMovement()->MaxWalkSpeed = movementSpeed / 2;
+}
+
 // Called every frame
 void AZombieAi::Tick(float DeltaTime)
 {
@@ -405,6 +417,11 @@ void AZombieAi::Tick(float DeltaTime)
     if (bloodQuantity <= 0.0f || CurrentHealth <= 0.0f)
     {
         KillZombie();
+    }
+
+    if (LFoot->IsSimulatingPhysics() && RFoot->IsSimulatingPhysics())
+    {
+        SetCrawlMode();
     }
 
     FString msg = FString::Printf(TEXT("Health: %f  Blood: %f"), CurrentHealth, bloodQuantity);

@@ -216,6 +216,9 @@ private:
 	UFUNCTION()
 	float GetCurrentHealth();
 
+	UFUNCTION()
+	void SetCrawlMode();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

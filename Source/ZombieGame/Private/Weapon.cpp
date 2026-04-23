@@ -7,6 +7,7 @@
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Perception/AISense_Hearing.h"
 
 
 //need to fuck about with accuracy cose barrel length plays with it
@@ -186,6 +187,20 @@ void AWeapon::Shoot()
             EAttachLocation::SnapToTarget,
             true
         );
+    }
+
+    UAISense_Hearing::ReportNoiseEvent(
+        GetWorld(),
+        GetActorLocation(), // gunshot location
+        1.0f,               // loudness (try 1–5)
+        this,               // instigator
+        0.0f,               // max range override (0 = use config)
+        TEXT("Gunshot")     // tag (optional but useful)
+    );
+
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("Noise Fired"));
     }
 
     //// Play sound if exists

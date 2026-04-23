@@ -158,20 +158,18 @@ void AZombie_AIController::SetupPerceptionSystem()
 		SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	
 
-	if (HearingConfig)
-	{
 		HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("Hearing Config"));
-		HearingConfig->HearingRange = 700.0f;
+		HearingConfig->HearingRange = 2000.0f;
 		HearingConfig->SetMaxAge(15.0f);
 
 		HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
 		HearingConfig->DetectionByAffiliation.bDetectFriendlies = true;
 		HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
-	}
+	
 
 	// Register senses
 	PerceptionComponent->ConfigureSense(*SightConfig);
-	//PerceptionComponent->ConfigureSense(*HearingConfig);
+	PerceptionComponent->ConfigureSense(*HearingConfig);
 
 	PerceptionComponent->SetDominantSense(UAISense_Sight::StaticClass());
 
@@ -192,22 +190,41 @@ void AZombie_AIController::SetupPerceptionSystem()
 
 void AZombie_AIController::OnPerceptionUpdated(const TArray<AActor*>& updatedActors)
 {
-	bool bCanSeePlayer = false;
 	AZombieGameCharacter* SeenPlayer = nullptr;
 
 	for (AActor* Actor : updatedActors)
 	{
-		if (AZombieGameCharacter* Player = Cast<AZombieGameCharacter>(Actor))
-		{
-			FActorPerceptionBlueprintInfo Info;
-			GetPerceptionComponent()->GetActorsPerception(Player, Info);
+		FActorPerceptionBlueprintInfo Info;
+		GetPerceptionComponent()->GetActorsPerception(Actor, Info);
 
-			for (const FAIStimulus& Stimulus : Info.LastSensedStimuli)
+		for (const FAIStimulus& Stimulus : Info.LastSensedStimuli)
+		{
+			//  SIGHT
+			if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 			{
-				if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
+				if (AZombieGameCharacter* Player = Cast<AZombieGameCharacter>(Actor))
 				{
-					bCanSeePlayer |= Stimulus.WasSuccessfullySensed();
-					SeenPlayer = Player;
+					if (Stimulus.WasSuccessfullySensed())
+					{
+						SeenPlayer = Player;
+					}
+				}
+			}
+
+			//  HEARING (NO CAST REQUIRED)
+			if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
+			{
+				FVector NoiseLocation = Stimulus.StimulusLocation;
+
+				if (GEngine)
+				{
+					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("Heard Noise"));
+				}
+
+				// Only react if not chasing player
+				if (!GetBlackboardComponent()->GetValueAsObject("TargetPlayer"))
+				{
+					GetBlackboardComponent()->SetValueAsVector("SoundLocation", NoiseLocation);
 				}
 			}
 		}
@@ -215,7 +232,6 @@ void AZombie_AIController::OnPerceptionUpdated(const TArray<AActor*>& updatedAct
 
 	if (SeenPlayer)
 	{
-		// LOCK TARGET
 		GetBlackboardComponent()->SetValueAsObject("TargetPlayer", SeenPlayer);
 
 		LastSeenTime = GetWorld()->GetTimeSeconds();

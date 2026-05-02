@@ -128,6 +128,8 @@ void AZombieAi::BeginPlay()
     // Apply movement speed
     GetCharacterMovement()->MaxWalkSpeed = movementSpeed;
 
+    GetMesh()->PlayAnimation(idleAnimation, true);
+
     // Apply sensing component settings
     pawnSensingComp->SightRadius = visionDetectionRange;
     pawnSensingComp->SetPeripheralVisionAngle(visionDetectionAngle);
@@ -159,6 +161,8 @@ void AZombieAi::ApplyLimbDamage(UPrimitiveComponent* HitComp, float Damage)
         FString msg = FString::Printf(TEXT("%s took %.2f damage (%.2f / %.2f)"),
             *LimbName.ToString(), Damage, Limb.CurrentHealth, Limb.MaxHealth);
         GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Orange, msg);
+
+        GetMesh()->PlayAnimation(damageAnimation, true);
 
         if (Limb.CurrentHealth <= Damage)
         {
@@ -270,6 +274,8 @@ void AZombieAi::KillZombie()
 {
     if (bIsDead) return;
 
+    GetMesh()->PlayAnimation(deathAnimation, true);
+
     TArray<UActorComponent*> Components;
     GetComponents(UStaticMeshComponent::StaticClass(), Components);
 
@@ -347,6 +353,8 @@ void AZombieAi::SetCrawlMode()
 
     // Slow them down
     GetCharacterMovement()->MaxWalkSpeed = movementSpeed / 2;
+
+    GetMesh()->PlayAnimation(crawlAnimation, true);
 }
 
 // Called every frame
@@ -432,11 +440,16 @@ void AZombieAi::Tick(float DeltaTime)
 
 void AZombieAi::AttackPlayer(APawn* Player)
 {
+    GetMesh()->PlayAnimation(attackAnimation, true);
+
     // Move towards player using AIController
     AAIController* AIController = Cast<AAIController>(GetController());
     if (AIController)
     {
         AIController->MoveToActor(Player, 50.f); 
+
+
+
     }
 }
 
@@ -446,7 +459,8 @@ void AZombieAi::HandleSeePlayer(APawn* Player)
 
     TargetPlayer = Player;
     OnSeePlayer(Player);
+
     AttackPlayer(Player);
     CurrentState = EZombieState::ZS_Attack;
-
+   
 }

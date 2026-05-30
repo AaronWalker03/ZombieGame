@@ -43,51 +43,63 @@ void AZombieAi::SetBodyparts()
 {
     TorsoMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TorsoMesh"));
     TorsoMesh->SetupAttachment(GetMesh(), FName("Torso"));
+    TorsoMesh->SetVisibility(false);
 
     HeadMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HeadMesh"));
     HeadMesh->SetupAttachment(TorsoMesh); // attach to head socket
+    HeadMesh->SetVisibility(false);
 
     //Setup Left Arm Attachments
     LUpArm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LUpArm"));
     LUpArm->SetupAttachment(TorsoMesh);
+    LUpArm->SetVisibility(false);
 
     LForearm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LForearm"));
     LForearm->SetupAttachment(LUpArm);
+    LForearm->SetVisibility(false);
 
     LHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LHand"));
     LHand->SetupAttachment(LForearm);
+    LHand->SetVisibility(false);
 
     //Setup Right Arm Attachments
     RUpArm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RUpArm"));
     RUpArm->SetupAttachment(TorsoMesh);
+    RUpArm->SetVisibility(false);
 
     RForearm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RForearm"));
     RForearm->SetupAttachment(RUpArm);
+    RForearm->SetVisibility(false);
 
     RHand = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RHand"));
     RHand->SetupAttachment(RForearm);
+    RHand->SetVisibility(false);
 
     //Setup Left Leg Attachments
     LThigh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LThigh"));
     LThigh->SetupAttachment(TorsoMesh);
+    LThigh->SetVisibility(false);
 
     LCalf = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LCalf"));
     LCalf->SetupAttachment(LThigh);
+    LCalf->SetVisibility(false);
 
     LFoot = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LFoot"));
     LFoot->SetupAttachment(LCalf);
+    LFoot->SetVisibility(false);
 
     //Setup Right Leg Attachments
     RThigh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RThigh"));
     RThigh->SetupAttachment(TorsoMesh);
+    RThigh->SetVisibility(false);
 
     RCalf = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RCalf"));
     RCalf->SetupAttachment(RThigh);
+    RCalf->SetVisibility(false);
 
     RFoot = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RFoot"));
     RFoot->SetupAttachment(RCalf);
-
-    GetMesh()->SetVisibility(false);
+    RFoot->SetVisibility(false);
 
     LimbHealthMap.Add("HeadMesh", FLimbData(99.f, 1.5f));
 
@@ -223,6 +235,7 @@ void AZombieAi::DismemberLimb(UPrimitiveComponent* HitComp)
         if (LimbName != "TorsoMesh")
         {
             // Detach and enable physics
+            LimbComp->SetVisibility(true);
             LimbComp->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
             LimbComp->SetSimulatePhysics(true);
             LimbComp->AddImpulse(FVector(0.f, 0.f, 200.f), NAME_None, true);

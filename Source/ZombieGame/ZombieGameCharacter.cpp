@@ -444,6 +444,16 @@ void AZombieGameCharacter::SwitchToSecondary()
 		Server_SwitchToSecondary();
 }
 
+void AZombieGameCharacter::MeleeAttack_Implementation()
+{
+	PerformMeleeTrace(MeleeDamage, MeleeRange, MeleeRadius);
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Melee Attack in ZombieGameCharacter"));
+	}
+}
+
 void AZombieGameCharacter::Server_SwitchToPrimary_Implementation()
 {
 	EquipWeapon(primaryWeapon);
@@ -539,6 +549,7 @@ void AZombieGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &AZombieGameCharacter::OnFire);
 		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Completed, this, &AZombieGameCharacter::StopFiring);
 
+		EnhancedInputComponent->BindAction(MeleeAction, ETriggerEvent::Triggered, this, &AZombieGameCharacter::MeleeAttack_Implementation);
 	}
 	else
 	{
@@ -690,6 +701,13 @@ void AZombieGameCharacter::SwitchFireMode()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,
 			fullAuto ? TEXT("Full Auto") : TEXT("Semi Auto"));
+	}
+
+	PerformMeleeTrace(MeleeDamage, MeleeRange, MeleeRadius);
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Melee Attack in ZombieGameCharacter"));
 	}
 }
 

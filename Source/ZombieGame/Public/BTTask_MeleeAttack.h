@@ -14,4 +14,9 @@ class ZOMBIEGAME_API UBTTask_MeleeAttack : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 	
+public:
+
+    virtual EBTNodeResult::Type ExecuteTask(
+        UBehaviorTreeComponent& OwnerComp,
+        uint8* NodeMemory) override;
 };

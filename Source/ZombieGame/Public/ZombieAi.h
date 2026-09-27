@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "CombatInterface.h"
+#include "BaseCharacter.h"
 #include "ZombieAi.generated.h"
 
 class UNiagaraSystem;
@@ -66,7 +67,7 @@ struct FLimbData
 };
 
 UCLASS()
-class ZOMBIEGAME_API AZombieAi : public ACharacter, public ICombatInterface
+class ZOMBIEGAME_API AZombieAi : public ABaseCharacter, public ICombatInterface
 {
 	GENERATED_BODY()
 
@@ -80,7 +81,7 @@ public:
 
 	UBehaviorTree* GetBehaviourTree() const;
 
-	int MeleeAttack_Implementation() override;
+	void MeleeAttack_Implementation() override;
 
 	void SetSpawner(AZombieSpawner* inSpawner);
 
@@ -233,6 +234,10 @@ private:
 
 	UFUNCTION()
 	void SetCrawlMode();
+
+	float MeleeDamage = 20.0f;
+	float MeleeRange = 150.0f;
+	float MeleeRadius = 30.0f;
 
 public:	
 	// Called every frame

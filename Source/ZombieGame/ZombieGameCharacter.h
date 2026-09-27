@@ -8,6 +8,8 @@
 #include "Public/Weapon.h"
 #include "PlayerCustomisationStruct.h"
 #include <GameFramework/SpringArmComponent.h>
+#include "BaseCharacter.h"
+#include "CombatInterface.h"
 #include "ZombieGameCharacter.generated.h"
 
 
@@ -36,7 +38,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 //rework weapon bp to work with new ads system
 
 UCLASS(abstract)
-class AZombieGameCharacter : public ACharacter
+class AZombieGameCharacter : public ABaseCharacter, public ICombatInterface
 {
 	GENERATED_BODY()
 
@@ -141,6 +143,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* SwitchSecondaryAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* MeleeAction;
 
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
@@ -407,7 +412,7 @@ protected:
 	void SwitchToPrimary();
 	void SwitchToSecondary();
 
-	
+	virtual void MeleeAttack_Implementation() override;
 
 
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
@@ -444,5 +449,10 @@ public:
 
 		void SetupStimulusSource();
 
+private:
+
+	float MeleeDamage = 20.0f;
+	float MeleeRange = 150.0f;
+	float MeleeRadius = 30.0f;
 };
 

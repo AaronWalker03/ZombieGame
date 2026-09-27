@@ -273,9 +273,14 @@ UBehaviorTree* AZombieAi::GetBehaviourTree() const
     return Tree;
 }
 
-int AZombieAi::MeleeAttack_Implementation()
+void AZombieAi::MeleeAttack_Implementation()
 {
-    return 0;
+    PerformMeleeTrace(MeleeDamage, MeleeRange, MeleeRadius);
+
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Melee Attack in ZombieAI"));
+    }
 }
 
 void AZombieAi::SetSpawner(AZombieSpawner* inSpawner)
@@ -459,7 +464,7 @@ void AZombieAi::AttackPlayer(APawn* Player)
     AAIController* AIController = Cast<AAIController>(GetController());
     if (AIController)
     {
-        AIController->MoveToActor(Player, 50.f); 
+        AIController->MoveToActor(Player, 50.f);
 
 
 
